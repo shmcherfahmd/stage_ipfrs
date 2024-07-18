@@ -2,12 +2,30 @@
 <html>
 <head>
     <title>Laravel AJAX Formations Management</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/css/iziToast.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/js/iziToast.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script> -->
+    <!-- Material Icons -->
+    <link href="{{ asset('assets/css/material-icons.css') }}" rel="stylesheet">
+    <!-- iziToast CSS -->
+    <link href="{{ asset('assets/css/iziToast.min.css') }}" rel="stylesheet">
+    <!-- jQuery -->
+    <script src="{{ asset('assets/js/jquery.min.js') }}"></script>
+    <script src="{{ asset('assets/js/jquery-3.5.1.min.js') }}"></script>
+    <script src="{{ asset('assets/js/jquery-3.6.0.min.js') }}"></script>
+    <!-- Popper.js -->
+    <script src="{{ asset('assets/js/popper.min.js') }}"></script>
+    <!-- Bootstrap Bundle JS -->
+    <script src="{{ asset('assets/js/bootstrap.bundle.min.js') }}"></script>
+    <!-- SweetAlert2 -->
+    <script src="{{ asset('assets/js/sweetalert2.min.js') }}"></script>
+    <!-- iziToast JS -->
+    <script src="{{ asset('assets/js/iziToast.min.js') }}"></script>
+
+
 
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
