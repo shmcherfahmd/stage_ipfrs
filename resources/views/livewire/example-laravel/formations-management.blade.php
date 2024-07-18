@@ -134,6 +134,7 @@
 
 
 
+
     <!-- Modal Modifier Formation -->
     <div class="modal fade" id="formationEditModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -336,83 +337,103 @@
             });
 
         // Ajouter une formation
-                // Ajouter une formation
-        $("#add-new-formation").click(function (e) {
-            e.preventDefault();
-            // Validation des champs requis
+       
+        // Ajouter une formation
+        $("#add-new-formation").click(function(e) {
+    e.preventDefault();
+
+    // Validation des champs requis
     let isValid = true;
 
-if ($('#new-formation-code').val().trim() === '') {
-    isValid = false;
-    $('#new-formation-code').addClass('is-invalid');
-    $('#code-warning').text('Ce champ est requis.');
-} else {
-    $('#new-formation-code').removeClass('is-invalid');
-    $('#code-warning').text('');
-}
+    if ($('#new-formation-code').val().trim() === '') {
+        isValid = false;
+        $('#new-formation-code').addClass('is-invalid');
+        $('#code-warning').text('Ce champ est requis.');
+    } else {
+        $('#new-formation-code').removeClass('is-invalid');
+        $('#code-warning').text('');
+    }
 
-if ($('#new-formation-nom').val().trim() === '') {
-    isValid = false;
-    $('#new-formation-nom').addClass('is-invalid');
-    $('#nom-warning').text('Ce champ est requis.');
-} else {
-    $('#new-formation-nom').removeClass('is-invalid');
-    $('#nom-warning').text('');
-}
+    if ($('#new-formation-nom').val().trim() === '') {
+        isValid = false;
+        $('#new-formation-nom').addClass('is-invalid');
+        $('#nom-warning').text('Ce champ est requis.');
+    } else {
+        $('#new-formation-nom').removeClass('is-invalid');
+        $('#nom-warning').text('');
+    }
 
-if ($('#new-formation-duree').val().trim() === '') {
-    isValid = false;
-    $('#new-formation-duree').addClass('is-invalid');
-    $('#duree-warning').text('Ce champ est requis.');
-} else {
-    $('#new-formation-duree').removeClass('is-invalid');
-    $('#duree-warning').text('');
-}
+    if ($('#new-formation-duree').val().trim() === '') {
+        isValid = false;
+        $('#new-formation-duree').addClass('is-invalid');
+        $('#duree-warning').text('Ce champ est requis.');
+    } else {
+        $('#new-formation-duree').removeClass('is-invalid');
+        $('#duree-warning').text('');
+    }
 
-if ($('#new-formation-prix').val().trim() === '') {
-    isValid = false;
-    $('#new-formation-prix').addClass('is-invalid');
-    $('#prix-warning').text('Ce champ est requis.');
-} else {
-    $('#new-formation-prix').removeClass('is-invalid');
-    $('#prix-warning').text('');
-}
+    if ($('#new-formation-prix').val().trim() === '') {
+        isValid = false;
+        $('#new-formation-prix').addClass('is-invalid');
+        $('#prix-warning').text('Ce champ est requis.');
+    } else {
+        $('#new-formation-prix').removeClass('is-invalid');
+        $('#prix-warning').text('');
+    }
 
-if (!isValid) {
-    return;
-}
+    if (!isValid) {
+        return;
+    }
 
-            let form = $('#formation-add-form')[0];
-            let data = new FormData(form);
+    let form = $('#formation-add-form')[0];
+    let data = new FormData(form);
 
-            $.ajax({
-                url: "{{ route('formations.store') }}",
-                type: "POST",
-                data: data,
-                dataType: "json",
-                processData: false,
-                contentType: false,
-                success: function (response) {
-                    if (response.status == 400) {
-                        iziToast.error({
-                            title: 'Erreur',
-                            message: response.message,
-                            position: 'topRight'
-                        });
-                    } else {
-                        iziToast.success({
-                            title: 'Succès',
-                            message: response.message,
-                            position: 'topRight'
-                        });
-                        $('#formationAddModal').modal('hide');
-                        setTimeout(function () {
-                            location.reload();
-                        }, 1000);
-                    }
+    $.ajax({
+        url: "{{ route('formation.store') }}",
+        type: "POST",
+        data: data,
+        dataType: "json",
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            if (response.error) {
+                if (response.error === 'Le code de formation existe déjà.') {
+                    $('#new-formation-code').addClass('is-invalid');
+                    $('#code-warning').text(response.error);
+                } else {
+                    iziToast.error({
+                        title: 'Erreur',
+                        message: response.error,
+                        position: 'topRight'
+                    });
                 }
-            });
-        });
+            } else {
+                iziToast.success({
+                    title: 'Succès',
+                    message: response.success,
+                    position: 'topRight'
+                });
+                $('#formationAddModal').modal('hide');
+                setTimeout(function() {
+                    location.reload();
+                }, 1000);
+            }
+        },
+        error: function(xhr, status, error) {
+            if (xhr.status === 409) { // Conflit
+                $('#new-formation-code').addClass('is-invalid');
+                $('#code-warning').text(xhr.responseJSON.error);
+            } else {
+                let errorMsg = 'Une erreur est survenue : ' + error;
+                iziToast.error({
+                    title: 'Erreur',
+                    message: errorMsg,
+                    position: 'topRight'
+                });
+            }
+        }
+    });
+});
 // $("#add-new-formation").click(function(e) {
 //     e.preventDefault();
 

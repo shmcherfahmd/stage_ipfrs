@@ -25,20 +25,28 @@ class FormationsController extends Component
             'duree' => 'required|integer',
             'prix' => 'required|integer',
         ]);
-
+    
+        // Vérifiez si le code existe déjà
+        if (Formations::where('code', $request->code)->exists()) {
+            return response()->json(['error' => 'Le code de Programme existe déjà.'], 409);
+        }
+    
         $formation = new Formations([
             'code' => $request->code,
             'nom' => $request->nom,
             'duree' => $request->duree,
             'prix' => $request->prix,
         ]);
-
+    
         if ($formation->save()) {
-            return response()->json(['status' => 200, 'message' => 'Formation ajoutée avec succès.']);
+            return response()->json(['success' => 'Formation ajoutée avec succès.']);
         } else {
-            return response()->json(['status' => 400, 'message' => 'Erreur lors de l\'ajout de la formation.']);
+            return response()->json(['error' => 'Erreur lors de l\'ajout de la formation.'], 400);
         }
     }
+    
+        
+    
 
     public function update(Request $request, $id)
     {

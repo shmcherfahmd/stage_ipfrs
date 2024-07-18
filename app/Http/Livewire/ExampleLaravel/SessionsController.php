@@ -616,7 +616,12 @@ class SessionsController extends Component
             'date_fin' => 'required|date',
             'formation_id' => 'required|exists:formations,id',
         ]);
-
+    
+        // Vérifiez si le nom existe déjà
+        if (Sessions::where('nom', $request->nom)->exists()) {
+            return response()->json(['error' => 'Le nom de Formation existe déjà.'], 409);
+        }
+    
         try {
             $session = Sessions::create($request->all());
             return response()->json(['success' => 'Formation créée avec succès', 'session' => $session]);
@@ -625,9 +630,15 @@ class SessionsController extends Component
         }
     }
 
+    public function show($id)
+    {
+        $session = Sessions::with('formation')->findOrFail($id);
+        return response()->json(['session' => $session]);
+    }
+    
     public function update(Request $request, $id)
     {
-        $validated = $request->validate([
+        $request->validate([
             'date_debut' => 'required|date',
             'date_fin' => 'required|date',
             'nom' => 'required|string',
@@ -636,14 +647,13 @@ class SessionsController extends Component
     
         try {
             $session = Sessions::findOrFail($id);
-    
-            // Modification permise même si des étudiants ou des professeurs sont inscrits
-            $session->update($validated);
-            return response()->json(['success' => 'Formation modifiée avec succès', 'session' => $session]);
+            $session->update($request->all());
+            return response()->json(['success' => 'Session modifiée avec succès', 'session' => $session]);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
         }
     }
+    
 
     public function destroy($id)
     {
