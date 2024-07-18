@@ -89,6 +89,7 @@
     </div>
 </div>
 
+
 <!-- Add Payment Modal -->
 <div class="modal fade" id="paiementAddModal" tabindex="-1" aria-labelledby="paiementAddModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -99,13 +100,13 @@
             </div>
             <div class="modal-body">
                 <input type="hidden" id="etudiant-id">
-                <input type="hidden" id="session-id">
+                <input type="hidden" id="etudiant-session-id">
                 <input type="hidden" id="prix-formation">
                 <input type="hidden" id="prix-reel">
                 <input type="hidden" id="reste-a-payer">
                 <div class="form-group">
                     <label for="nouveau-montant-paye" class="form-label">Nouveau Montant Payé:</label>
-                    <input type="text" class="form-control" id="nouveau-montant-paye" placeholder="Entrez le montant payé">
+                    <input type="number" class="form-control" id="nouveau-montant-paye" placeholder="Entrez le montant payé">
                 </div>
                 <div class="form-group">
                     <label for="mode-paiement" class="form-label">Mode de Paiement:</label>
@@ -122,12 +123,12 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-info" onclick="addPaiement()">Ajouter Paiement</button>
-
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
             </div>
         </div>
     </div>
 </div>
+
 
 <!-- Add Professor Modal -->
 <div class="modal fade" id="profAddModal" tabindex="-1" aria-labelledby="profAddModalLabel" aria-hidden="true">
@@ -194,6 +195,7 @@
 </div>
 
 
+<!-- Modal Ajouter Paiement pour Professeur -->
 <div class="modal fade" id="profPaiementAddModal" tabindex="-1" aria-labelledby="profPaiementAddModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -207,26 +209,27 @@
                 <input type="hidden" id="prof-montant">
                 <input type="hidden" id="prof-montant_a_paye">
                 <input type="hidden" id="prof-reste-a-payer">
-                <div class="form-group">
-                    <label for="prof-nouveau-montant-paye" class="form-label">Nouveau Montant Payé:</label>
-                    <input type="text" class="form-control" id="prof-nouveau-montant-paye" placeholder="Entrez le montant payé">
+                <input type="hidden" id="prof-typeymntprofs">
+                <div class="mb-3">
+                    <label for="prof-nouveau-montant-paye" class="form-label">Montant Payé</label>
+                    <input type="number" class="form-control" id="prof-nouveau-montant-paye" required>
                 </div>
-                <div class="form-group">
-                    <label for="prof-mode-paiement" class="form-label">Mode de Paiement:</label>
-                    <select class="form-control" id="prof-mode-paiement">
+                <div class="mb-3">
+                    <label for="prof-mode-paiement" class="form-label">Mode de Paiement</label>
+                    <select class="form-select" id="prof-mode-paiement" required>
                         @foreach ($modes_paiement as $mode)
                             <option value="{{ $mode->id }}">{{ $mode->nom }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="prof-date-paiement" class="form-label">Date de Paiement:</label>
-                    <input type="date" class="form-control" id="prof-date-paiement" name="date_paiement">
+                <div class="mb-3">
+                    <label for="prof-date-paiement" class="form-label">Date de Paiement</label>
+                    <input type="date" class="form-control" id="prof-date-paiement" name="date_paiement" required>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-info" onclick="addProfPaiement()">Ajouter Paiement</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                <button type="button" class="btn btn-primary" onclick="addProfPaiement()">Ajouter</button>
             </div>
         </div>
     </div>
@@ -234,16 +237,13 @@
 
 
 
-
-
-
 <div id="formationContentContainer" style="display:none;">
-    <center><h4>Liste des étudiants</h4></center>
+    <center><h6><span id="session-info"></span></h6></center>
     <div id="formationContents"></div>
 </div>
 
 <div id="formationProfContentContainer" style="display:none;">
-    <center><h4>Liste des Professeurs</h4></center>
+    <center><h6><span id="prof-session-info"></span></h6></center>
     <div id="formationProfContents"></div>
 </div>
 
@@ -286,7 +286,6 @@
         </div>
     </div>
 </div>
-
 
 
 <!-- Add Session Modal -->
@@ -391,7 +390,6 @@
 </div>
 
 <script type="text/javascript">
-
 $(document).ready(function () {
     $.ajaxSetup({
         headers: {
@@ -631,49 +629,6 @@ $(document).ready(function () {
         });
     }
 
-    window.addEtudiantAndPaiement = function() {
-        const etudiantId = $('#etudiant-id').val();
-        const sessionId = $('#new-student-session_id').val();
-        const datePaiement = $('#date-paiement').val();
-        const montantPaye = $('#montant-paye').val();
-        const modePaiement = $('#mode-paiement').val();
-        const prixReel = $('#prix-reel').val();
-
-        if (!etudiantId || !sessionId) {
-            alert('Etudiant ID or Session ID is missing.');
-            return;
-        }
-
-        $.ajax({
-            url: `/sessions/${sessionId}/etudiants/${etudiantId}/add`,
-            type: 'POST',
-            data: {
-                etudiant_id: etudiantId,
-                date_paiement: datePaiement,
-                montant_paye: montantPaye,
-                mode_paiement: modePaiement,
-                prix_reel: prixReel
-            },
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(response) {
-                if (response.success) {
-                    $('#etudiantAddModal').modal('hide');
-                    showContents(sessionId);
-                } else {
-                    alert(response.error);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error:', error);
-                console.error('Status:', status);
-                console.error('Response:', xhr.responseText);
-                alert('Erreur lors de l\'ajout de l\'étudiant: ' + xhr.responseText);
-            }
-        });
-    }
-
     window.openAddPaymentModal = function(etudiantId, sessionId) {
         $.ajax({
             url: `/sessions/${sessionId}/etudiants/${etudiantId}/details`,
@@ -688,7 +643,7 @@ $(document).ready(function () {
                         });
                     } else {
                         $('#etudiant-id').val(etudiantId);
-                        $('#session-id').val(sessionId);
+                        $('#etudiant-session-id').val(sessionId);
                         $('#prix-formation').val(response.prix_formation);
                         $('#prix-reel').val(response.prix_reel);
                         $('#reste-a-payer').val(resteAPayer);
@@ -710,97 +665,47 @@ $(document).ready(function () {
         });
     };
 
+    window.addPaiement = function() {
+        let etudiantId = $('#etudiant-id').val();
+        let sessionId = $('#etudiant-session-id').val();
+        let nouveauMontantPaye = $('#nouveau-montant-paye').val();
+        let modePaiement = $('#mode-paiement').val();
+        let datePaiement = $('#date-paiement').val();
 
+        // Log the values to check if datePaiement is correctly retrieved
+        console.log({
+            etudiantId,
+            sessionId,
+            nouveauMontantPaye,
+            modePaiement,
+            datePaiement
+        });
 
-
-window.addPaiement = function() {
-    let etudiantId = $('#etudiant-id').val();
-    let sessionId = $('#session-id').val();
-    let nouveauMontantPaye = $('#nouveau-montant-paye').val();
-    let modePaiement = $('#mode-paiement').val();
-    let datePaiement = $('#date-paiement').val();
-
-    $.ajax({
-        url: `/sessions/${sessionId}/paiements`,
-        type: 'POST',
-        data: {
-            etudiant_id: etudiantId,
-            montant_paye: nouveauMontantPaye,
-            mode_paiement: modePaiement,
-            date_paiement: datePaiement  // Ensure this field is included
-        },
-        success: function(response) {
-            if (response.success) {
-                $('#paiementAddModal').modal('hide');
-                showContents(sessionId);
-            } else {
-                alert(response.error);
+        $.ajax({
+            url: `/sessions/${sessionId}/paiements`,
+            type: 'POST',
+            data: {
+                etudiant_id: etudiantId,
+                montant_paye: nouveauMontantPaye,
+                mode_paiement: modePaiement,
+                date_paiement: datePaiement  // Ensure this field is included
+            },
+            success: function(response) {
+                if (response.success) {
+                    $('#paiementAddModal').modal('hide');
+                    showContents(sessionId);
+                } else {
+                    alert(response.error);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                console.error('Status:', status);
+                console.error('Response:', xhr.responseText);
+                alert('Erreur lors de l\'ajout du paiement de l\'etudiant: ' + xhr.responseText);
             }
-        },
-        error: function(xhr, status, error) {
-            console.error('Error:', error);
-            console.error('Status:', status);
-            console.error('Response:', xhr.responseText);
-            alert('Erreur lors de l\'ajout du paiement: ' + xhr.responseText);
-        }
-    });
-};
-
-
-
-window.addProfPaiement = function() {
-    let profId = $('#prof-id').val();
-    let sessionId = $('#prof-session-id').val();
-    let montantPaye = Math.round(parseFloat($('#prof-nouveau-montant-paye').val()));
-    let modePaiement = $('#prof-mode-paiement').val();
-    let datePaiement = $('#prof-date-paiement').val();
-
-    // Debug log to ensure the date field value is retrieved correctly
-    console.log({
-        profId: profId,
-        sessionId: sessionId,
-        montantPaye: montantPaye,
-        modePaiement: modePaiement,
-        datePaiement: datePaiement // Log the date value
-    });
-
-    // Ensure the date is formatted correctly as 'YYYY-MM-DD'
-    if (!datePaiement) {
-        alert('Veuillez sélectionner une date de paiement.');
-        return;
-    }
-
-    $.ajax({
-        url: `/sessions/${sessionId}/profpaiements`,
-        type: 'POST',
-        data: {
-            prof_id: profId,
-            montant_paye: montantPaye,
-            mode_paiement: modePaiement,
-            date_paiement: datePaiement
-        },
-        success: function(response) {
-            if (response.success) {
-                $('#profPaiementAddModal').modal('hide');
-                showProfContents(sessionId);
-            } else {
-                alert(response.error);
-            }
-        },
-        error: function(xhr, status, error) {
-            console.error('Error:', error);
-            console.error('Status:', status);
-            console.error('Response:', xhr.responseText);
-            alert('Erreur lors de l\'ajout du paiement: ' + xhr.responseText);
-        }
-    });
-};
-
-
-
-
-
-
+        });
+    };
 
 
     window.deleteStudentFromSession = function(etudiantId, sessionId) {
@@ -884,23 +789,31 @@ window.addProfPaiement = function() {
                             <td>
                                 <button class="btn btn-dark" onclick="openAddPaymentModal(${content.id}, ${sessionId})"><i class="material-icons opacity-10">payment</i></button>
                                 <button class="btn btn-danger" onclick="deleteStudentFromSession(${content.id}, ${sessionId})"><i class="material-icons opacity-10">delete_forever</i></button>
+                                <a href="/sessions/${sessionId}/generateReceipt/${content.id}" class="btn btn-info">
+                                    <i class="material-icons opacity-10">download</i>
+                                </a>
+
                             </td>
                         </tr>`;
                     });
                 } else {
-                    html += '<tr><td colspan="8" class="text-center">Aucun étudiant trouvé pour cette Formation.</td></tr>';
+                    html += '<tr><td colspan="8" class="text-center">Aucun étudiant trouvé pour cette session.</td></tr>';
                 }
 
                 html += `</tbody></table></div></div></div></div></div>`;
                 $('#formationContents').html(html);
                 $('#formationContentContainer').show();
+
+                // Display session info and statistics
+                $('#session-info').html(`<h5>Liste des étudiants de la Formation: "${response.session_nom}" du Programme : ${response.formation_nom} </h5>  Nombre de Étudiants: ${response.total_etudiants} | Total Prix Réel: ${response.total_prix_reel} | Total Montant Payé: ${response.total_montant_paye} | Reste à Payer: ${response.total_reste_a_payer}  `);
+
                 $('html, body').animate({ scrollTop: $('#formationContentContainer').offset().top }, 'slow');
             },
-            error: function() {
-                alert('Erreur lors du chargement des contenus.');
+            error: function(xhr, status, error) {
+                alert('Erreur lors du chargement des contenus: ' + error);
             }
         });
-    };
+    }
 
     window.hideStudentContents = function() {
         $('#formationContentContainer').hide();
@@ -956,13 +869,93 @@ window.addProfPaiement = function() {
         }
     }
 
+    window.openAddProfPaymentModal = function(profId, sessionId) {
+        $.ajax({
+            url: `/sessions/${sessionId}/profs/${profId}/details`,
+            type: 'GET',
+            success: function(response) {
+                if (response.success) {
+                    const resteAPayer = response.reste_a_payer;
+                    if (resteAPayer <= 0) {
+                        iziToast.warning({
+                            message: 'Le professeur a déjà payé la totalité de la formation.',
+                            position: 'topRight'
+                        });
+                    } else {
+                        $('#prof-id').val(profId);
+                        $('#prof-session-id').val(sessionId);
+                        $('#prof-montant').val(response.montant);
+                        $('#prof-montant_a_paye').val(response.montant_a_paye);
+                        $('#prof-reste-a-payer').val(resteAPayer);
+                        $('#prof-typeymntprofs').val(response.type_paiement); // Assurez-vous que cette valeur est correcte
+                        $('#profPaiementAddModal').modal('show');
+                    }
+                } else {
+                    iziToast.error({
+                        message: response.error,
+                        position: 'topRight'
+                    });
+                }
+            },
+            error: function(xhr, status, error) {
+                iziToast.error({
+                    message: 'Erreur lors de la récupération des détails: ' + error,
+                    position: 'topRight'
+                });
+            }
+        });
+    }
+
+    window.addProfPaiement = function() {
+        let profId = $('#prof-id').val();
+        let sessionId = $('#prof-session-id').val();
+        let nouveauMontantPaye = $('#prof-nouveau-montant-paye').val();
+        let modePaiement = $('#prof-mode-paiement').val();
+        let datePaiement = $('#prof-date-paiement').val();
+        let montant = $('#prof-montant').val();
+        let montantAPaye = $('#prof-montant_a_paye').val();
+        let typeymntprofsId = $('#prof-typeymntprofs').val();
+
+        if (!datePaiement) {
+            alert('Veuillez sélectionner une date de paiement.');
+            return;
+        }
+
+        $.ajax({
+            url: `/sessions/${sessionId}/profpaiements`,
+            type: 'POST',
+            data: {
+                prof_id: profId,
+                montant_paye: nouveauMontantPaye,
+                mode_paiement: modePaiement,
+                date_paiement: datePaiement,
+                typeymntprofs_id: typeymntprofsId,
+                montant: montant,
+                montant_a_paye: montantAPaye
+            },
+            success: function(response) {
+                if (response.success) {
+                    $('#profPaiementAddModal').modal('hide');
+                    showProfContents(sessionId);
+                } else {
+                    alert(response.error);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                console.error('Status:', status);
+                console.error('Response:', xhr.responseText);
+                alert('Erreur lors de l\'ajout du paiement du professeur: ' + xhr.responseText);
+            }
+        });
+    }
+
     window.loadProfSessionDetails = function(sessionId) {
         $.ajax({
             url: `/sessions/${sessionId}/details`,
             type: 'GET',
             success: function(response) {
                 if (response.formation) {
-                    // $('#prof-montant').val(response.formation.prix); // Set Montant to Formation Price
                     const today = new Date().toISOString().split('T')[0];
                     $('#prof-date-paiement').val(today); // Set Date de Paiement to today's date
                 } else {
@@ -1045,80 +1038,49 @@ window.addProfPaiement = function() {
         }
     }
 
-    // window.openAddProfPaymentModal = function(profId, sessionId) {
-    //     $.ajax({
-    //         url: `/sessions/${sessionId}/profs/${profId}/details`,
-    //         type: 'GET',
-    //         success: function(response) {
-    //             if (response.success) {
-    //                 const resteAPayer = response.reste_a_payer;
-    //                 if (resteAPayer <= 0) {
-    //                     iziToast.warning({
-    //                         message: 'Le professeur a déjà reçu la totalité du paiement.',
-    //                         position: 'topRight'
-    //                     });
-    //                 } else {
-    //                     $('#prof-id').val(profId);
-    //                     $('#prof-session-id').val(sessionId);
-    //                     $('#prof-montant').val(response.montant);
-    //                     $('#prof-montant_a_paye').val(response.montant_a_paye);
-    //                     $('#prof-reste-a-payer').val(resteAPayer);
-    //                     $('#profPaiementAddModal').modal('show');
-    //                 }
-    //             } else {
-    //                 iziToast.error({
-    //                     message: response.error,
-    //                     position: 'topRight'
-    //                 });
-    //             }
-    //         },
-    //         error: function(xhr, status, error) {
-    //             iziToast.error({
-    //                 message: 'Erreur lors de la récupération des détails: ' + error,
-    //                 position: 'topRight'
-    //             });
-    //         }
-    //     });
-    // }
 
-    window.openAddProfPaymentModal = function(profId, sessionId) {
-    $.ajax({
-        url: `/sessions/${sessionId}/profs/${profId}/details`,
-        type: 'GET',
-        success: function(response) {
-            if (response.success) {
-                const resteAPayer = response.reste_a_payer;
-                if (resteAPayer <= 0) {
-                    iziToast.warning({
-                        message: 'Le professeur a déjà reçu la totalité du paiement.',
-                        position: 'topRight'
-                    });
-                } else {
-                    $('#prof-id').val(profId);
-                    $('#prof-session-id').val(sessionId);
-                    $('#prof-montant').val(response.montant);
-                    $('#prof-montant_a_paye').val(response.montant_a_paye);
-                    $('#prof-reste-a-payer').val(resteAPayer);
-                    $('#prof-date-paiement').val(response.date_paiement); // Assurez-vous que cette valeur est définie
+    window.addEtudiantAndPaiement = function() {
+        const etudiantId = $('#etudiant-id').val();
+        const sessionId = $('#new-student-session_id').val();
+        const datePaiement = $('#date-paiement').val();
+        const montantPaye = $('#montant-paye').val();
+        const modePaiement = $('#mode-paiement').val();
+        const prixReel = $('#prix-reel').val();
 
-                    $('#profPaiementAddModal').modal('show');
-                }
-            } else {
-                iziToast.error({
-                    message: response.error,
-                    position: 'topRight'
-                });
-            }
-        },
-        error: function(xhr, status, error) {
-            iziToast.error({
-                message: 'Erreur lors de la récupération des détails: ' + error,
-                position: 'topRight'
-            });
+        if (!etudiantId || !sessionId) {
+            alert('Etudiant ID or Session ID is missing.');
+            return;
         }
-    });
-}
 
+        $.ajax({
+            url: `/sessions/${sessionId}/etudiants/${etudiantId}/add`,
+            type: 'POST',
+            data: {
+                etudiant_id: etudiantId,
+                date_paiement: datePaiement,
+                montant_paye: montantPaye,
+                mode_paiement: modePaiement,
+                prix_reel: prixReel
+            },
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                if (response.success) {
+                    $('#etudiantAddModal').modal('hide');
+                    showContents(sessionId);
+                } else {
+                    alert(response.error);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                console.error('Status:', status);
+                console.error('Response:', xhr.responseText);
+                alert('Erreur lors de l\'ajout de l\'étudiant: ' + xhr.responseText);
+            }
+        });
+    }
 
     window.addProfAndPaiement = function() {
         const profId = $('#prof-id').val();
@@ -1135,10 +1097,6 @@ window.addProfPaiement = function() {
             return;
         }
 
-        submitProfAndPaiement(profId, sessionId, datePaiement, montantAPaye, montantPaye, modePaiement, montant, typeId);
-    }
-
-    function submitProfAndPaiement(profId, sessionId, datePaiement, montantAPaye, montantPaye, modePaiement, montant, typeId) {
         $.ajax({
             url: `/sessions/${sessionId}/profs/${profId}/add`,
             type: 'POST',
@@ -1200,6 +1158,7 @@ window.addProfPaiement = function() {
         }
     }
 
+
     window.showProfContents = function(sessionId) {
         $.ajax({
             url: `/sessions/${sessionId}/profcontents`,
@@ -1255,6 +1214,9 @@ window.addProfPaiement = function() {
                             <td>
                                 <button class="btn btn-dark" onclick="openAddProfPaymentModal(${content.id}, ${sessionId})"><i class="material-icons opacity-10">payment</i></button>
                                 <button class="btn btn-danger" onclick="deleteProfFromSession(${content.id}, ${sessionId})"><i class="material-icons opacity-10">delete_forever</i></button>
+                                 <a href="/sessions/${sessionId}/generateProfReceipt/${content.id}" class="btn btn-info">
+                                    <i class="material-icons opacity-10">download</i>
+                                </a>
                             </td>
                         </tr>`;
                     });
@@ -1265,6 +1227,8 @@ window.addProfPaiement = function() {
                 html += `</tbody></table></div></div></div></div></div>`;
                 $('#formationProfContents').html(html);
                 $('#formationProfContentContainer').show();
+                $('#prof-session-info').html(`<h5>Liste des Professeurs de la Formation: ${response.prof_session_nom} du Programme: ${response.prof_formation_nom}</h5> Nombre de Professeurs: ${response.total_profs} | Total Montant à Payer: ${response.prof_total_montant_a_paye} | Total Montant Payé: ${response.prof_total_montant_paye} | Reste à Payer: ${response.prof_total_reste_a_payer}  `);
+
                 $('html, body').animate({ scrollTop: $('#formationProfContentContainer').offset().top }, 'slow');
             },
             error: function(xhr, status, error) {
@@ -1277,11 +1241,8 @@ window.addProfPaiement = function() {
         $('#formationProfContentContainer').hide();
         $('html, body').animate({ scrollTop: 0 }, 'slow');
     }
+
 });
-
-
-
-
 </script>
 </body>
 </html>

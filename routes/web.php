@@ -19,6 +19,8 @@ use App\Http\Livewire\ExampleLaravel\FormationsController;
 use App\Http\Livewire\ExampleLaravel\ContenusFormationController;
 use App\Http\Livewire\ExampleLaravel\SessionsController;
 use App\Http\Livewire\ExampleLaravel\PaiementController;
+use App\Http\Livewire\ExampleLaravel\PaiementProfController;
+
 
 
 
@@ -51,6 +53,24 @@ Route::get('/', function(){
 });
 
 
+
+//Paiement routes
+
+Route::get('/export/paiementprofs', [PaiementProfController::class, 'exportPaiementProfs'])->name('export.paiementprofs');
+Route::get('/export/paiements', [PaiementController::class, 'exportPaiements'])->name('export.paiements');
+Route::get('/export/professeurs', [ProfesseurController::class, 'export'])->name('export.professeurs');
+
+Route::get('/paiements', [PaiementController::class, 'index'])->name('paiements.list_paiement');
+Route::get('paiement-management', PaiementController::class)->middleware('auth')->name('paiement-management');
+Route::get('export-paiements', [PaiementController::class, 'exportPaiements'])->name('export.paiements');
+Route::get('searchPayments', [PaiementController::class, 'searchPayments'])->name('searchPayments');
+
+Route::get('/paiementprofs', [PaiementProfController::class, 'index'])->name('paiementprofs.list_paiementprof');
+Route::get('paiementprof-management', PaiementProfController::class)->middleware('auth')->name('paiementprof-management');
+Route::get('export-paiementprofs', [PaiementProfController::class, 'exportPaiementProfs'])->name('export.paiementprofs');
+Route::get('searchPaymentProfs', [PaiementProfController::class, 'searchPaymentProfs'])->name('searchPaymentProfs');
+
+
 Route::post('/professeur/search', [SessionsController::class, 'searchProfByPhone'])->name('professeur.search');
 Route::post('/sessions/{sessionId}/check-prof', [SessionsController::class, 'checkProfInSession']);
 Route::post('/sessions/{sessionId}/profs/{profId}/add', [SessionsController::class, 'addProfToSession']);
@@ -73,6 +93,7 @@ Route::get('user-management', UserManagement::class)->middleware('auth')->name('
 
 Route::post('/sessions/{sessionId}/profs', [SessionsController::class, 'addProfToSession']);
 Route::get('/profs/search', [ProfesseurController::class, 'searchByPhoneProf']);
+Route::get('/sessions/{etudiantId}/generate-receipt/{sessionId}', [SessionsController::class, 'generateReceipt'])->name('sessions.generateReceipt');
 
 
 // Formations routes
@@ -81,14 +102,17 @@ Route::post('/formations/store', [FormationsController::class, 'store']);
 Route::put('/formations/{id}/update', [FormationsController::class, 'update']);
 Route::delete('/formations/{id}/delete', [FormationsController::class, 'delete_formation']);
 
+Route::delete('contenus/{id}', [ContenusFormationController::class, 'delete_contenue'])->name('contenus.delete');
 
+Route::resource('contenus', ContenusFormationController::class);
 
+Route::get('formations/{formation}/contents', [FormationsController::class, 'getContents']);
 
 // Etudiant routes
-Route::post('/etudiants/{etudiantId}/sessions/{sessionId}/add', [EtudiantController::class, 'addStudentToSession']);
+// Route::post('/etudiants/{etudiantId}/sessions/{sessionId}/add', [EtudiantController::class, 'addStudentToSession']);
 Route::post('/etudiant/search', [EtudiantController::class, 'searchByPhone'])->name('etudiant.search');
 Route::post('/sessions/{sessionId}/check-student', [SessionsController::class, 'checkStudentInSession'])->name('sessions.check-student');
-Route::post('/sessions/{sessionId}/etudiants/{etudiantId}/add', [EtudiantController::class, 'addStudentToSession']);
+// Route::post('/sessions/{sessionId}/etudiants/{etudiantId}/add', [EtudiantController::class, 'addStudentToSession']);
 
 
 Route::get('/sessions/{sessionId}/total-student-payments', [SessionsController::class, 'getTotalStudentPayments']);
@@ -104,6 +128,8 @@ Route::prefix('sessions')->group(function () {
 
 
 
+
+    Route::post('{sessionId}/etudiants/{etudiantId}/add', [SessionsController::class, 'addStudentToSession']);
 
 
     Route::get('details/{id}', [SessionsController::class, 'getFormationDetails'])->name('sessions.details');
@@ -148,6 +174,11 @@ Route::prefix('sessions')->group(function () {
     // Route::post('etudiant/search', [SessionsController::class, 'searchStudentByPhone'])->name('etudiant.search');
 });
 
+Route::get('/sessions/{sessionId}/generateReceipt/{etudiantId}', [SessionsController::class, 'generateReceipt'])->name('sessions.generateReceipt');
+// routes/web.php
+
+Route::get('/sessions/{sessionId}/generateProfReceipt/{profId}', [SessionsController::class, 'generateProfReceipt'])->name('sessions.generateProfReceipt');
+
 Route::delete('/sessions/{id}', [SessionsController::class, 'destroy'])->name('session.delete');
 Route::post('/sessions/update/{id}', [SessionsController::class, 'update'])->name('session.update');
 Route::put('update/{id}', [SessionsController::class, 'update'])->name('session.update');
@@ -184,7 +215,7 @@ Route::get('/search3', [ContenusFormationController::class, 'search3'])->name('s
 
 
 
-
+Route::get('/etudiants/{etudiantId}/details', [EtudiantController::class, 'getEtudiantDetails']);
 //Etudiant routes
 Route::get('/etudiants', [EtudiantController::class, 'liste_etudiant'])->name('etudiant.list');
 Route::post('etudiants', [EtudiantController::class, 'store'])->name('etudiant.store');
@@ -200,6 +231,11 @@ Route::post('/etudiants', [EtudiantController::class, 'store'])->name('etudiant.
 Route::get('etudiant/delete/{id}', [EtudiantController::class, 'deleteEtudiant'])->name('etudiant.delete');
 Route::delete('etudiant/confirm_delete/{id}', [EtudiantController::class, 'confirmDeleteEtudiant'])->name('etudiant.confirm_delete');
 
+// Route::get('check/nni', [EtudiantController::class, 'checkNni'])->name('check.nni');
+// Route::get('check/email', [EtudiantController::class, 'checkEmail'])->name('check.email');
+Route::get('etudiants/check-nni', [EtudiantController::class, 'checkNni'])->name('check.nni');
+Route::get('etudiants/check-email', [EtudiantController::class, 'checkEmail'])->name('checkprof.email');
+
 
 // Professeur routes
 Route::get('prof-management', ProfesseurController::class)->middleware('auth')->name('prof-management');
@@ -210,6 +246,11 @@ Route::post('prof/store', [ProfesseurController::class, 'store'])->name('prof.st
 Route::put('prof/update/{id}', [ProfesseurController::class, 'update'])->name('prof.update'); // Changed to PUT method
 Route::delete('prof/delete/{id}', [ProfesseurController::class, 'delete_prof'])->name('prof.delete');
 Route::get('search4', [ProfesseurController::class, 'search4'])->name('search4');
+
+Route::get('/check-phone', [ProfesseurController::class, 'checkPhone'])->name('check.phone');
+Route::get('/check-email', [ProfesseurController::class, 'checkEmail'])->name('check.email');
+Route::get('/check-wtsp', [ProfesseurController::class, 'checkWtsp'])->name('check.wtsp');
+
 
 
 

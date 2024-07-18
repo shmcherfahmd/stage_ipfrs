@@ -37,6 +37,7 @@
                                         <td>
                                             <a href="javascript:void(0)" id="edit-etudiant" data-id="{{ $etudiant->id }}" class="btn btn-info"><i class="material-icons opacity-10">border_color</i></a>
                                             <a href="javascript:void(0)" id="delete-etudiant" data-id="{{ $etudiant->id }}" class="btn btn-danger"><i class="material-icons opacity-10">delete</i></a>
+                                            <a href="javascript:void(0)" class="btn btn-info detail-etudiant" data-id="{{ $etudiant->id }}"><i class="material-icons opacity-10">info</i></a> 
                                         </td>
                                     </tr>
                                     @endforeach

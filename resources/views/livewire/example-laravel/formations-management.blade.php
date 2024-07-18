@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -69,83 +70,53 @@
 
     <!-- Modal Ajouter Formation -->
     <div class="modal fade" id="formationAddModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Ajouter une nouvelle Programme</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="formation-add-form">
-                        @csrf
-                        <div class="row mb-2">
-                            <div class="col-md-6">
-                                <label for="code" class="form-label required">Code:</label>
-                                <input type="text" class="form-control" id="new-formation-code" placeholder="Code du programme"  name="code">
-                                 <div class="text-danger" id="code-warning"></div>
-
-                            </div>
-                            <div class="col-md-6">
-                                <label for="nom" class="form-label required">Nom :</label>
-                                <input type="text" class="form-control" id="new-formation-nom" placeholder="Nom du programme" name="nom">
-                            <div class="text-danger" id="nom-warning"></div>
-
-                            </div>
-                        </div>
-                        <br>
-                        <div class="row mb-2">
-                            <div class="col-md-6">
-                                <label for="duree" class="form-label required">Durée:</label>
-                                <input type="number" class="form-control" id="new-formation-duree" placeholder="Durée" name="duree">
-                            <div class="text-danger" id="duree-warning"></div>
-
-                            </div>
-                            <div class="col-md-6">
-                                <label for="prix" class="form-label required">Prix:</label>
-                                <input type="number" class="form-control" id="new-formation-prix" placeholder="Prix" name="prix">
-                            <div class="text-danger" id="prix-warning"></div>
-
-                            </div>
-                        </div>
-                        
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-info" id="add-new-formation">Ajouter</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-
-
-    <!-- Modal Détails Formation -->
-<!-- <div class="modal fade" id="formationDetailModal" tabindex="-1" aria-labelledby="formationDetailModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content" style="width: 15cm;">
+    <div class="modal-dialog">
+        <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="formationDetailModalLabel">Détails de la Formation</h5>
+                <h5 class="modal-title" id="exampleModalLabel">Ajouter une nouvelle Programme</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div id="formation-details">
-                    <p><strong>Code:</strong> <span id="formation-code-details"></span></p>
-                    <p><strong>Nom:</strong> <span id="formation-nom-details"></span></p>
-                    <p><strong>Durée:</strong> <span id="formation-duree-details"></span> Heures</p>
-                    <p><strong>Prix:</strong> <span id="formation-prix-details"></span> MRU</p>
-                    
-                    <h4>Contenus de la Formation</h4>
-                    <ul id="formation-contents-details"></ul>
-                </div>
+                <form id="formation-add-form">
+                    @csrf
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <label for="code" class="form-label required">Code:</label>
+                            <input type="text" class="form-control" id="new-formation-code" placeholder="Code du programme" name="code">
+                            <div class="text-danger" id="code-warning"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="nom" class="form-label required">Nom :</label>
+                            <input type="text" class="form-control" id="new-formation-nom" placeholder="Nom du programme" name="nom">
+                            <div class="text-danger" id="nom-warning"></div>
+                        </div>
+                    </div>
+                    <br>
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <label for="duree" class="form-label required">Durée:</label>
+                            <input type="number" class="form-control" id="new-formation-duree" placeholder="Durée" name="duree">
+                            <div class="text-danger" id="duree-warning"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="prix" class="form-label required">Prix:</label>
+                            <input type="number" class="form-control" id="new-formation-prix" placeholder="Prix" name="prix">
+                            <div class="text-danger" id="prix-warning"></div>
+                        </div>
+                    </div>
+                </form>
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="add-new-formation">Ajouter</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
             </div>
         </div>
     </div>
-</div> -->
+</div>
+
+
+
+
 
 
     <!-- Modal Modifier Formation -->
@@ -201,76 +172,125 @@
 
 
     <!-- Modal Ajouter Contenu -->
-    <div class="modal fade" id="contenuAddModal" tabindex="-1" aria-labelledby="contenuAddModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="contenuAddModalLabel">Ajouter un nouveau contenu</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="contenu-add-form">
-                        @csrf
-                        <input type="hidden" id="formation-id-contenu" name="formation_id">
-                        <div class="mb-3">
-                            <label for="nomchap" class="form-label">Nom du Chapitre</label>
-                            <input type="text" class="form-control" id="nomchap" name="nomchap" required>
+    <div class="modal fade" id="contenuAddModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Ajouter un nouveau Contenu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="contenu-add-form">
+                    @csrf
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <label for="nomchap" class="form-label required">Nom du Chapitre:</label>
+                            <input type="text" class="form-control" id="new-contenu-nomchap" placeholder="Nom du Chapitre" name="nomchap">
+                            <div class="text-danger" id="nomchap-warning"></div>
                         </div>
-                        <div class="mb-3">
-                            <label for="nomunite" class="form-label">Nom de l'Unité</label>
-                            <input type="text" class="form-control" id="nomunite" name="nomunite" required>
+                        <div class="col-md-6">
+                            <label for="nomunite" class="form-label required">Nom de l'Unité:</label>
+                            <input type="text" class="form-control" id="new-contenu-nomunite" placeholder="Nom de l'Unité" name="nomunite">
+                            <div class="text-danger" id="nomunite-warning"></div>
                         </div>
-                        <div class="mb-3">
-                            <label for="description" class="form-label">Description</label>
-                            <textarea class="form-control" id="description" name="description"></textarea>
+                    </div>
+                    <br>
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <label for="nombreheures" class="form-label required">Nombre Heures:</label>
+                            <input type="number" class="form-control" id="new-contenu-nombreheures" placeholder="Nombre Heures" name="nombreheures">
+                            <div class="text-danger" id="nombreheures-warning"></div>
                         </div>
-                        <div class="mb-3">
-                            <label for="nombreheures" class="form-label">Nombre Heures</label>
-                            <input type="number" class="form-control" id="nombreheures" name="nombreheures" required>
+                        <div class="col-md-6">
+                            <!-- <label for="description" class="form-label">Description:</label>
+                            <textarea class="form-control" id="new-contenu-description" placeholder="Description" name="description"></textarea> -->
+                            <label for="formation_id" class="form-label required">Formation:</label>
+                            <select class="form-control" id="new-contenu-formation_id" name="formation_id">
+                                <option value="">Sélectionner Formation</option>
+                                @foreach ($formations as $formation)
+                                    <option value="{{ $formation->id }}">{{ $formation->nom }}</option>
+                                @endforeach
+                            </select>
+                            <div class="text-danger" id="formation_id-warning"></div>
                         </div>
-                        <button type="button" class="btn btn-primary" id="add-new-contenu">Ajouter</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-                    </form>
-                </div>
+                    </div>
+                    <br>
+                    <div class="mb-2">
+                        <label for="description" class="form-label">Description:</label>
+                        <textarea class="form-control" id="new-contenu-description" placeholder="Description" name="description"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="add-new-contenu">Ajouter</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
             </div>
         </div>
     </div>
+</div>
+
+
 
     <!-- Modal Modifier Contenu -->
+    <!-- Modal Modifier Contenu -->
     <div class="modal fade" id="contenuEditModal" tabindex="-1" aria-labelledby="contenuEditModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="contenuEditModalLabel">Modifier Contenu</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="contenu-edit-form">
-                        @csrf
-                        <input type="hidden" id="contenu-id" name="id">
-                        <div class="mb-3">
-                            <label for="nomchap-edit" class="form-label">Nom du Chapitre</label>
-                            <input type="text" class="form-control" id="nomchap-edit" name="nomchap" required>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="contenuEditModalLabel">Modifier Contenu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="contenu-edit-form">
+                    @csrf
+                    <input type="hidden" id="contenu-id" name="id">
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <label for="nomchap-edit" class="form-label required">Nom du Chapitre:</label>
+                            <input type="text" class="form-control" id="nomchap-edit" name="nomchap">
+                            <div class="text-danger" id="nomchap-warning-edit"></div>
                         </div>
-                        <div class="mb-3">
-                            <label for="nomunite-edit" class="form-label">Nom de l'Unité</label>
-                            <input type="text" class="form-control" id="nomunite-edit" name="nomunite" required>
+                        <div class="col-md-6">
+                            <label for="nomunite-edit" class="form-label required">Nom de l'Unité:</label>
+                            <input type="text" class="form-control" id="nomunite-edit" name="nomunite">
+                            <div class="text-danger" id="nomunite-warning-edit"></div>
                         </div>
-                        <div class="mb-3">
-                            <label for="description-edit" class="form-label">Description</label>
-                            <textarea class="form-control" id="description-edit" name="description"></textarea>
+                    </div>
+                    <br>
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <label for="nombreheures-edit" class="form-label required">Nombre Heures:</label>
+                            <input type="number" class="form-control" id="nombreheures-edit" name="nombreheures">
+                            <div class="text-danger" id="nombreheures-warning-edit"></div>
                         </div>
-                        <div class="mb-3">
-                            <label for="nombreheures-edit" class="form-label">Nombre Heures</label>
-                            <input type="number" class="form-control" id="nombreheures-edit" name="nombreheures" required>
+                        <div class="col-md-6">
+                            <!-- <label for="description-edit" class="form-label">Description:</label>
+                            <textarea class="form-control" id="description-edit" name="description"></textarea> -->
+                            <label for="formation_id-edit" class="form-label required">Formation:</label>
+                            <select class="form-control" id="formation_id-edit" name="formation_id">
+                                <option value="">Sélectionner Formation</option>
+                                @foreach ($formations as $formation)
+                                    <option value="{{ $formation->id }}">{{ $formation->nom }}</option>
+                                @endforeach
+                            </select>
+                            <div class="text-danger" id="formation_id-warning-edit"></div>
                         </div>
-                        <button type="button" class="btn btn-primary" id="update-contenu">Modifier</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-                    </form>
-                </div>
+                    </div>
+                    <br>
+                    <div class="mb-2">
+                        <label for="description-edit" class="form-label">Description:</label>
+                        <textarea class="form-control" id="description-edit" name="description"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="update-contenu">Modifier</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
             </div>
         </div>
     </div>
+</div>
+
 
     <script type="text/javascript">
     $(document).ready(function () {
@@ -301,8 +321,52 @@
             });
 
         // Ajouter une formation
+                // Ajouter une formation
         $("#add-new-formation").click(function (e) {
             e.preventDefault();
+            // Validation des champs requis
+    let isValid = true;
+
+if ($('#new-formation-code').val().trim() === '') {
+    isValid = false;
+    $('#new-formation-code').addClass('is-invalid');
+    $('#code-warning').text('Ce champ est requis.');
+} else {
+    $('#new-formation-code').removeClass('is-invalid');
+    $('#code-warning').text('');
+}
+
+if ($('#new-formation-nom').val().trim() === '') {
+    isValid = false;
+    $('#new-formation-nom').addClass('is-invalid');
+    $('#nom-warning').text('Ce champ est requis.');
+} else {
+    $('#new-formation-nom').removeClass('is-invalid');
+    $('#nom-warning').text('');
+}
+
+if ($('#new-formation-duree').val().trim() === '') {
+    isValid = false;
+    $('#new-formation-duree').addClass('is-invalid');
+    $('#duree-warning').text('Ce champ est requis.');
+} else {
+    $('#new-formation-duree').removeClass('is-invalid');
+    $('#duree-warning').text('');
+}
+
+if ($('#new-formation-prix').val().trim() === '') {
+    isValid = false;
+    $('#new-formation-prix').addClass('is-invalid');
+    $('#prix-warning').text('Ce champ est requis.');
+} else {
+    $('#new-formation-prix').removeClass('is-invalid');
+    $('#prix-warning').text('');
+}
+
+if (!isValid) {
+    return;
+}
+
             let form = $('#formation-add-form')[0];
             let data = new FormData(form);
 
@@ -334,6 +398,104 @@
                 }
             });
         });
+// $("#add-new-formation").click(function(e) {
+//     e.preventDefault();
+
+//     // Validation des champs requis
+//     let isValid = true;
+
+//     if ($('#new-formation-code').val().trim() === '') {
+//         isValid = false;
+//         $('#new-formation-code').addClass('is-invalid');
+//         $('#code-warning').text('Ce champ est requis.');
+//     } else {
+//         $('#new-formation-code').removeClass('is-invalid');
+//         $('#code-warning').text('');
+//     }
+
+//     if ($('#new-formation-nom').val().trim() === '') {
+//         isValid = false;
+//         $('#new-formation-nom').addClass('is-invalid');
+//         $('#nom-warning').text('Ce champ est requis.');
+//     } else {
+//         $('#new-formation-nom').removeClass('is-invalid');
+//         $('#nom-warning').text('');
+//     }
+
+//     if ($('#new-formation-duree').val().trim() === '') {
+//         isValid = false;
+//         $('#new-formation-duree').addClass('is-invalid');
+//         $('#duree-warning').text('Ce champ est requis.');
+//     } else {
+//         $('#new-formation-duree').removeClass('is-invalid');
+//         $('#duree-warning').text('');
+//     }
+
+//     if ($('#new-formation-prix').val().trim() === '') {
+//         isValid = false;
+//         $('#new-formation-prix').addClass('is-invalid');
+//         $('#prix-warning').text('Ce champ est requis.');
+//     } else {
+//         $('#new-formation-prix').removeClass('is-invalid');
+//         $('#prix-warning').text('');
+//     }
+
+//     if (!isValid) {
+//         return;
+//     }
+
+//     let form = $('#formation-add-form')[0];
+//     let data = new FormData(form);
+
+//     $.ajax({
+//         url: "{{ route('formation.store') }}",
+//         type: "POST",
+//         data: data,
+//         dataType: "json",
+//         processData: false,
+//         contentType: false,
+//         success: function(response) {
+//             if (response.error) {
+//                 if (response.error === 'Le code de formation existe déjà.') {
+//                     $('#new-formation-code').addClass('is-invalid');
+//                     $('#code-warning').text(response.error);
+//                 } else {
+//                     iziToast.error({
+//                         title: 'Erreur',
+//                         message: response.error,
+//                         position: 'topRight'
+//                     });
+//                 }
+//             } else {
+//                 iziToast.success({
+//                     title: 'Succès',
+//                     message: response.success,
+//                     position: 'topRight'
+//                 });
+//                 $('#formationAddModal').modal('hide');
+//                 setTimeout(function() {
+//                     location.reload();
+//                 }, 1000);
+//             }
+//         },
+//         error: function(xhr, status, error) {
+//             if (xhr.status === 409) { // Conflit
+//                 $('#new-formation-code').addClass('is-invalid');
+//                 $('#code-warning').text(xhr.responseJSON.error);
+//             } else {
+//                 let errorMsg = 'Une erreur est survenue : ' + error;
+//                 iziToast.error({
+//                     title: 'Erreur',
+//                     message: errorMsg,
+//                     position: 'topRight'
+//                 });
+//             }
+//         }
+//     });
+// });
+
+
+
 
         // Modifier une formation
         $('body').on('click', '#edit-formation', function () {
@@ -450,8 +612,52 @@
         });
 
         // Ajouter un contenu
-        $("#add-new-contenu").click(function (e) {
+        $("#add-new-contenu").click(function(e) {
             e.preventDefault();
+
+            // Validation des champs requis
+            let isValid = true;
+
+            if ($('#new-contenu-nomchap').val().trim() === '') {
+                isValid = false;
+                $('#new-contenu-nomchap').addClass('is-invalid');
+                $('#nomchap-warning').text('Ce champ est requis.');
+            } else {
+                $('#new-contenu-nomchap').removeClass('is-invalid');
+                $('#nomchap-warning').text('');
+            }
+
+            if ($('#new-contenu-nomunite').val().trim() === '') {
+                isValid = false;
+                $('#new-contenu-nomunite').addClass('is-invalid');
+                $('#nomunite-warning').text('Ce champ est requis.');
+            } else {
+                $('#new-contenu-nomunite').removeClass('is-invalid');
+                $('#nomunite-warning').text('');
+            }
+
+            if ($('#new-contenu-nombreheures').val().trim() === '') {
+                isValid = false;
+                $('#new-contenu-nombreheures').addClass('is-invalid');
+                $('#nombreheures-warning').text('Ce champ est requis.');
+            } else {
+                $('#new-contenu-nombreheures').removeClass('is-invalid');
+                $('#nombreheures-warning').text('');
+            }
+
+            // if ($('#new-contenu-formation_id').val().trim() === '') {
+            //     isValid = false;
+            //     $('#new-contenu-formation_id').addClass('is-invalid');
+            //     $('#formation_id-warning').text('Ce champ est requis.');
+            // } else {
+            //     $('#new-contenu-formation_id').removeClass('is-invalid');
+            //     $('#formation_id-warning').text('');
+            // }
+
+            if (!isValid) {
+                return;
+            }
+
             let form = $('#contenu-add-form')[0];
             let data = new FormData(form);
 
@@ -462,7 +668,7 @@
                 dataType: "json",
                 processData: false,
                 contentType: false,
-                success: function (response) {
+                success: function(response) {
                     if (response.error) {
                         iziToast.error({
                             title: 'Erreur',
@@ -476,62 +682,78 @@
                             position: 'topRight'
                         });
                         $('#contenuAddModal').modal('hide');
-                        setTimeout(function () {
+                        setTimeout(function() {
                             location.reload();
                         }, 1000);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        $.each(xhr.responseJSON.errors, function(field, errors) {
+                            let fieldId = '#new-contenu-' + field;
+                            $(fieldId).addClass('is-invalid');
+                            $(fieldId + '-warning').text(errors.join(', '));
+                        });
+                    } else {
+                        let errorMsg = 'Une erreur est survenue : ' + error;
+                        iziToast.error({
+                            title: 'Erreur',
+                            message: errorMsg,
+                            position: 'topRight'
+                        });
                     }
                 }
             });
         });
 
         // Modifier un contenu
-        window.editContent = function(contentId) {
-            $.get('/contenus/' + contentId, function (data) {
-                $('#contenu-id').val(data.contenu.id);
-                $('#nomchap-edit').val(data.contenu.nomchap);
-                $('#nomunite-edit').val(data.contenu.nomunite);
-                $('#description-edit').val(data.contenu.description);
-                $('#nombreheures-edit').val(data.contenu.nombreheures);
-                $('#formation_id-edit').val(data.contenu.formation_id);
-                $('#contenuEditModal').modal('show');
-            });
-        }
+        // window.editContent = function(contentId) {
+        //     $.get('/contenus/' + contentId, function (data) {
+        //         $('#contenu-id').val(data.contenu.id);
+        //         $('#nomchap-edit').val(data.contenu.nomchap);
+        //         $('#nomunite-edit').val(data.contenu.nomunite);
+        //         $('#description-edit').val(data.contenu.description);
+        //         $('#nombreheures-edit').val(data.contenu.nombreheures);
+        //         $('#formation_id-edit').val(data.contenu.formation_id);
+        //         $('#contenuEditModal').modal('show');
+        //     });
+        // }
 
-        $('#update-contenu').click(function (e) {
-            e.preventDefault();
-            let id = $('#contenu-id').val();
-            let form = $('#contenu-edit-form')[0];
-            let data = new FormData(form);
-            data.append('_method', 'PUT');
+        // $('#update-contenu').click(function (e) {
+        //     e.preventDefault();
+        //     let id = $('#contenu-id').val();
+        //     let form = $('#contenu-edit-form')[0];
+        //     let data = new FormData(form);
+        //     data.append('_method', 'PUT');
 
-            $.ajax({
-                url: '/contenus/' + id,
-                type: 'POST',
-                data: data,
-                dataType: 'json',
-                processData: false,
-                contentType: false,
-                success: function (response) {
-                    if (response.error) {
-                        iziToast.error({
-                            title: 'Erreur',
-                            message: response.error,
-                            position: 'topRight'
-                        });
-                    } else {
-                        iziToast.success({
-                            title: 'Succès',
-                            message: response.success,
-                            position: 'topRight'
-                        });
-                        $('#contenuEditModal').modal('hide');
-                        setTimeout(function () {
-                            location.reload();
-                        }, 1000);
-                    }
-                }
-            });
-        });
+        //     $.ajax({
+        //         url: '/contenus/' + id,
+        //         type: 'POST',
+        //         data: data,
+        //         dataType: 'json',
+        //         processData: false,
+        //         contentType: false,
+        //         success: function (response) {
+        //             if (response.error) {
+        //                 iziToast.error({
+        //                     title: 'Erreur',
+        //                     message: response.error,
+        //                     position: 'topRight'
+        //                 });
+        //             } else {
+        //                 iziToast.success({
+        //                     title: 'Succès',
+        //                     message: response.success,
+        //                     position: 'topRight'
+        //                 });
+        //                 $('#contenuEditModal').modal('hide');
+        //                 setTimeout(function () {
+        //                     location.reload();
+        //                 }, 1000);
+        //             }
+        //         }
+        //     });
+        // });
 
         // Supprimer un contenu
         window.deleteContent = function(contentId) {
@@ -570,7 +792,7 @@
         }
 
 
-        $('body').on('click', '#delete-formation', function (e) {
+    $('body').on('click', '#delete-formation', function (e) {
         e.preventDefault();
         var id = $(this).data('id');
 
@@ -639,87 +861,186 @@
 
         // Afficher les contenus de la formation
         // Afficher les contenus de la formation
-window.showContents = function(formationId) {
-    $.ajax({
-        url: '/formations/' + formationId + '/contents', // Utilisation de guillemets simples pour l'URL
-        type: 'GET',
-        success: function(response) {
-            if (response.error) {
-                alert(response.error);
-                return;
+        // $(document).ready(function () {
+    // Autres configurations et fonctions...
+
+    // Modifier un contenu
+    // Modifier un contenu
+    // $(document).ready(function () {
+    // Modifier un contenu
+    window.editContent = function(contentId) {
+        $.get('/contenus/' + contentId, function (data) {
+            $('#contenu-id').val(data.contenu.id);
+            $('#nomchap-edit').val(data.contenu.nomchap);
+            $('#nomunite-edit').val(data.contenu.nomunite);
+            $('#description-edit').val(data.contenu.description);
+            $('#nombreheures-edit').val(data.contenu.nombreheures);
+            $('#formation_id-edit').val(data.contenu.formation_id);
+            $('#contenuEditModal').modal('show');
+        });
+    };
+
+    $('#update-contenu').click(function (e) {
+        e.preventDefault();
+        let id = $('#contenu-id').val();
+        let form = $('#contenu-edit-form')[0];
+        let data = new FormData(form);
+        data.append('_method', 'PUT');
+
+        $.ajax({
+            url: '/contenus/' + id,
+            type: 'POST',
+            data: data,
+            dataType: 'json',
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                if (response.error) {
+                    iziToast.error({
+                        title: 'Erreur',
+                        message: response.error,
+                        position: 'topRight'
+                    });
+                } else {
+                    iziToast.success({
+                        title: 'Succès',
+                        message: response.success,
+                        position: 'topRight'
+                    });
+                    $('#contenuEditModal').modal('hide');
+                    setTimeout(function () {
+                        location.reload();
+                    }, 1000);
+                }
             }
+        });
+    });
+// });
 
-            let html = `
-            <div class="container-fluid py-4">
-                <div class="row">
-                    <div class="col-12">
-                        <div class="card my-4">
-                            <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2 d-flex justify-content-between align-items-center">
-                                <div>
-                                    <button class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#contenuAddModal" onclick="setFormationId(${formationId})" data-toggle="tooltip" title="ajouter un contenu"><i class="material-icons opacity-10">add</i></button>
-                                    <button class="btn btn-secondary" onclick="hideContents()">Fermer</button>
-                                </div>
-                            </div>
-                            <div class="card-body px-0 pb-2">
-                                <div class="table-responsive p-0" id="sessions-table">
-                                    <table class="table align-items-center mb-0">
-                                        <thead>
-                                            <tr>
-                                                <th>ID</th>
-                                                <th>Chapitre</th>
-                                                <th>Unité</th>
-                                                <th>Description</th>
-                                                <th>Nombre Heures</th>
-                                                <th>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>`;
-
-            if (response.contenus.length > 0) {
-                response.contenus.forEach(function(content) {
-                    html += `<tr>
-                        <td>${content.id}</td>
-                        <td>${content.nomchap}</td>
-                        <td>${content.nomunite}</td>
-                        <td>${content.description}</td>
-                        <td>${content.nombreheures}</td>
-                        <td>
-                            <button class="btn btn-danger" onclick="deleteContent(${content.id})"><i class="material-icons opacity-10">delete</i></button>
-                              <button class="btn btn-info" onclick="editContent(${content.id})">
-                            <i class="material-icons opacity-10">edit</i>
-                        </button>
-                        </td>
-                    </tr>`;
-                });
-            } else {
-                html += '<tr><td colspan="6" class="text-center">Aucun Contenus trouvé pour cet Programme.</td></tr>';
-            }
-
-            html += `</tbody>
-                    </table>
-                    </div>
-                    </div>
-                    </div>
-                    </div>
-                    </div>
-                    </div>`;
-
-            $('#formationContents').html(html);
-            $('#formationContentContainer').show();
-            $('html, body').animate({ scrollTop: $('#formationContentContainer').offset().top }, 'slow');
-        },
-        error: function() {
-            alert('Erreur lors du chargement des contenus.');
+    // Supprimer un contenu
+    window.deleteContent = function(contentId) {
+        if (confirm("Voulez-vous vraiment supprimer ce contenu?")) {
+            $.ajax({
+                url: '/contenus/' + contentId,
+                type: 'DELETE',
+                dataType: 'json',
+                success: function (response) {
+                    if (response.success) {
+                        iziToast.success({
+                            title: 'Succès',
+                            message: response.success,
+                            position: 'topRight'
+                        });
+                        setTimeout(function () {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        iziToast.error({
+                            title: 'Erreur',
+                            message: response.error,
+                            position: 'topRight'
+                        });
+                    }
+                },
+                error: function (xhr, status, error) {
+                    iziToast.error({
+                        title: 'Erreur',
+                        message: 'Une erreur s\'est produite: ' + error,
+                        position: 'topRight'
+                    });
+                }
+            });
         }
-    });
-};
+    }
+
+    // Afficher les contenus de la formation
+    window.showContents = function(formationId) {
+        $.ajax({
+            url: '/formations/' + formationId + '/contents',
+            type: 'GET',
+            success: function(response) {
+                if (response.error) {
+                    alert(response.error);
+                    return;
+                }
+
+                let html = `
+                <div class="container-fluid py-4">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card my-4">
+                                <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <button class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#contenuAddModal" onclick="setFormationId(${formationId})" data-toggle="tooltip" title="ajouter un contenu"><i class="material-icons opacity-10">add</i></button>
+                                        <button class="btn btn-secondary" onclick="hideContents()">Fermer</button>
+                                    </div>
+                                </div>
+                                <div class="card-body px-0 pb-2">
+                                    <div class="table-responsive p-0" id="sessions-table">
+                                        <table class="table align-items-center mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>ID</th>
+                                                    <th>Chapitre</th>
+                                                    <th>Unité</th>
+                                                    <th>Description</th>
+                                                    <th>Nombre Heures</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>`;
+
+                if (response.contenus.length > 0) {
+                    response.contenus.forEach(function(content) {
+                        html += `<tr>
+                            <td>${content.id}</td>
+                            <td>${content.nomchap}</td>
+                            <td>${content.nomunite}</td>
+                            <td>${content.description}</td>
+                            <td>${content.nombreheures}</td>
+                             <td>
+                                 <a href="javascript:void(0)" class="btn btn-info" onclick="editContent(${content.id})"><i class="material-icons opacity-10">border_color</i></a>
+                                <a href="javascript:void(0)" class="btn btn-danger" onclick="deleteContent(${content.id})"><i class="material-icons opacity-10">delete</i></a>
+                             </td>
+                            <td>
+
+
+                        </tr>`;
+                    });
+                } else {
+                    html += '<tr><td colspan="6" class="text-center">Aucun Contenus trouvé pour cet Programme.</td></tr>';
+                }
+
+                html += `</tbody>
+                        </table>
+                        </div>
+                        </div>
+                        </div>
+                        </div>
+                        </div>
+                        </div>`;
+
+                $('#formationContents').html(html);
+                $('#formationContentContainer').show();
+                $('html, body').animate({ scrollTop: $('#formationContentContainer').offset().top }, 'slow');
+            },
+            error: function() {
+                alert('Erreur lors du chargement des contenus.');
+            }
+        });
+    }
+
+    window.setFormationId = function(formationId) {
+        $('#formation-id-contenu').val(formationId);
+    };
+});
 
 
 
-        window.setFormationId = function(formationId) {
-            $('#formation-id-contenu').val(formationId);
-        };
-    });
+        // window.setFormationId = function(formationId) {
+        //     $('#formation-id-contenu').val(formationId);
+        // };
+    // });
     </script>
 </body>
 </html>

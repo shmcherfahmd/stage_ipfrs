@@ -29,4 +29,3 @@ class Etudiant extends Model
         return $this->hasMany(Paiement::class);
     }
 }
-

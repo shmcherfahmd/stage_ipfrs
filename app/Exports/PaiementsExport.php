@@ -23,12 +23,12 @@ class PaiementsExport implements FromCollection, WithHeadings, WithMapping
     public function headings(): array
     {
         return [
-            'ID',
+            // 'ID',
             'Nom & Prénom',
             'Portable',
             'WhatsApp',
             'Programme',
-            'Session',
+            'Formation',
             'Prix Réel',
             'Montant Payé',
             'Mode de Paiement',
@@ -45,7 +45,7 @@ class PaiementsExport implements FromCollection, WithHeadings, WithMapping
         $resteAPayer = $paiement->prix_reel - $montantPayeTotal;
 
         return [
-            $paiement->id,
+            // $paiement->id,
             $paiement->etudiant->nomprenom ?? 'N/A',
             $paiement->etudiant->phone ?? 'N/A',
             $paiement->etudiant->wtsp ?? 'N/A',

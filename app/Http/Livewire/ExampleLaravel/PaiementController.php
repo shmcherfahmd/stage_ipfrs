@@ -51,24 +51,48 @@ class PaiementController extends Component
         return Excel::download(new PaiementsExport, 'paiements.xlsx');
     }
 
-
-
     public function searchPayments(Request $request)
     {
         if ($request->ajax()) {
             $search = $request->search;
-            $paiements = Paiement::with('etudiant', 'session')
+            $paiements = Paiement::with(['etudiant', 'session', 'mode'])
                 ->where('montant_paye', 'like', "%$search%")
-                ->orWhereHas('etudiant', function($query) use ($search) {
-                    $query->where('nomprenom', 'like', "%$search%");
+                ->orWhereHas('etudiant', function ($query) use ($search) {
+                    $query->where('nomprenom', 'like', "%$search%")
+                          ->orWhere('phone', 'like', "%$search%")
+                          ->orWhere('wtsp', 'like', "%$search%");
                 })
-                ->orWhereHas('session', function($query) use ($search) {
+                ->orWhereHas('session', function ($query) use ($search) {
+                    $query->where('nom', 'like', "%$search%");
+                })
+                ->orWhereHas('mode', function ($query) use ($search) {
                     $query->where('nom', 'like', "%$search%");
                 })
                 ->paginate(10);
-
-            $view = view('livewire.example-laravel.payment-list', compact('paiements'))->render();
+    
+            $view = view('livewire.example-laravel.paiements-list', compact('paiements'))->render();
             return response()->json(['html' => $view]);
         }
     }
+    
+
+
+    // public function searchPayments(Request $request)
+    // {
+    //     if ($request->ajax()) {
+    //         $search = $request->search;
+    //         $paiements = Paiement::with('etudiant', 'session')
+    //             ->where('montant_paye', 'like', "%$search%")
+    //             ->orWhereHas('etudiant', function($query) use ($search) {
+    //                 $query->where('nomprenom', 'like', "%$search%");
+    //             })
+    //             ->orWhereHas('session', function($query) use ($search) {
+    //                 $query->where('nom', 'like', "%$search%");
+    //             })
+    //             ->paginate(10);
+
+    //         $view = view('livewire.example-laravel.payment-list', compact('paiements'))->render();
+    //         return response()->json(['html' => $view]);
+    //     }
+    // }
 }

@@ -1,7 +1,7 @@
 <?php
-
 namespace App\Http\Livewire\ExampleLaravel;
 
+use PDF;
 use Illuminate\Http\Request;
 use Livewire\Component;
 use App\Models\Formations;
@@ -10,28 +10,156 @@ use App\Models\Professeur;
 use App\Models\Etudiant;
 use App\Models\Paiement;
 use App\Models\PaiementProf;
-
 use App\Models\ModePaiement;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Maatwebsite\Excel\Facades\Excel;
-
 use App\Exports\SessionsExport;
 use App\Models\Typeymntprofs;
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class SessionsController extends Component
 {
-
-
     public function list_session()
     {
-        $sessions = Sessions::with('etudiants', 'formation')->paginate(4);
+        $sessions = Sessions::with('etudiants','professeurs', 'formation')->paginate(4);
         $formations = Formations::all();
         $modes_paiement = ModePaiement::all();
         $typeymntprofs = Typeymntprofs::all();
         return view('livewire.example-laravel.sessions-management', compact('sessions', 'formations', 'modes_paiement', 'typeymntprofs'));
     }
 
+
+    public function getProfDetails($sessionId, $profId)
+    {
+        try {
+            $professeur = Professeur::with(['paiementprofs' => function ($query) use ($sessionId) {
+                $query->where('session_id', $sessionId);
+            }])->findOrFail($profId);
+
+            $session = Sessions::findOrFail($sessionId);
+
+            $montantPaye = $professeur->paiementprofs->where('session_id', $sessionId)->sum('montant_paye');
+            $montantAPaye = $professeur->paiementprofs->where('session_id', $sessionId)->first()->montant_a_paye ?? 0;
+            $montant = $professeur->paiementprofs->where('session_id', $sessionId)->first()->montant ?? 0;
+            $typePaiement = $professeur->paiementprofs->where('session_id', $sessionId)->first()->typeymntprofs_id ?? 'N/A';
+            $resteAPayer = $montantAPaye - $montantPaye;
+
+            return response()->json([
+                'success' => true,
+                'montant' => $montant,
+                'montant_a_paye' => $montantAPaye,
+                'type_paiement' => $typePaiement,
+                'reste_a_payer' => $resteAPayer
+            ]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Professeur ou session non trouvé.'], 404);
+        } catch (\Exception $e) {
+            Log::error('Error fetching professor details: ' . $e->getMessage());
+            return response()->json(['error' => 'Erreur lors de la récupération des détails du professeur.'], 500);
+        }
+    }
+
+
+    public function addProfPaiement(Request $request, $sessionId)
+    {
+        Log::info('Received data:', $request->all());
+
+        $request->validate([
+            'prof_id' => 'required|exists:professeurs,id',
+            'montant_paye' => 'required|numeric',
+            'mode_paiement' => 'required|exists:modes_paiement,id',
+            'date_paiement' => 'required|date',
+            'typeymntprofs_id' => 'required|exists:typeymntprofs,id',
+            'montant' => 'required|numeric',
+            'montant_a_paye' => 'required|numeric'
+        ]);
+
+        try {
+            $professeur = Professeur::findOrFail($request->prof_id);
+            $session = Sessions::findOrFail($sessionId);
+
+            // Vérifier si le professeur est déjà dans la session
+            $existingProf = $session->professeurs()->where('prof_id', $request->prof_id)->first();
+            if (!$existingProf) {
+                return response()->json(['error' => 'Professeur non trouvé dans cette session.'], 404);
+            }
+
+            // Ajouter l'enregistrement de paiement
+            $paiementprof = new PaiementProf([
+                'prof_id' => $request->prof_id,
+                'session_id' => $sessionId,
+                'montant' => $request->montant,
+                'montant_a_paye' => $request->montant_a_paye,
+                'montant_paye' => $request->montant_paye,
+                'mode_paiement_id' => $request->mode_paiement,
+                'date_paiement' => $request->date_paiement,
+                'typeymntprofs_id' => $request->typeymntprofs_id,
+            ]);
+            $paiementprof->save();
+
+            return response()->json(['success' => 'Paiement ajouté avec succès']);
+        } catch (ModelNotFoundException $e) {
+            Log::error('Model not found: ' . $e->getMessage());
+            return response()->json(['error' => 'Session ou Professeur non trouvé.'], 404);
+        } catch (\Exception $e) {
+            Log::error('Error adding payment: ' . $e->getMessage());
+            return response()->json(['error' => 'Erreur lors de l\'ajout du paiement: ' . $e->getMessage()], 500);
+        }
+    }
+
+
+    public function getProfSessionContents($sessionId)
+    {
+        $session = Sessions::with(['professeurs' => function($query) {
+            $query->withPivot('date_paiement');
+        }, 'professeurs.paiementprofs.mode', 'formation'])->find($sessionId);
+
+        if (!$session) {
+            return response()->json(['error' => 'Session non trouvée'], 404);
+        }
+
+        $uniqueProfs = $session->professeurs->unique('id');
+        $totalProfs = $uniqueProfs->count();
+        $totalMontantAPaye = $uniqueProfs->sum(function($prof) use ($sessionId) {
+            return $prof->paiementprofs->where('session_id', $sessionId)->sum('montant_a_paye');
+        });
+        $totalMontantPaye = $uniqueProfs->sum(function($prof) use ($sessionId) {
+            return $prof->paiementprofs->where('session_id', $sessionId)->sum('montant_paye');
+        });
+        $totalResteAPayer = $totalMontantAPaye - $totalMontantPaye;
+
+        $professeurs = $session->professeurs->map(function($professeur) use ($session) {
+            $montantPaye = $professeur->paiementprofs->where('session_id', $session->id)->sum('montant_paye');
+            $montant = $professeur->paiementprofs->where('session_id', $session->id)->first()->montant ?? 0;
+            $montantAPaye = $professeur->paiementprofs->where('session_id', $session->id)->first()->montant_a_paye ?? 0;
+            $resteAPayer = $montantAPaye - $montantPaye;
+
+            return [
+                'id' => $professeur->id,
+                'nomprenom' => $professeur->nomprenom ?? 'N/A',
+                'phone' => $professeur->phone ?? 'N/A',
+                'wtsp' => $professeur->wtsp ?? 'N/A',
+                'montant' => $montant,
+                'montant_a_paye' => $montantAPaye,
+                'montant_paye' => $montantPaye,
+                'reste_a_payer' => $resteAPayer,
+                'mode_paiement' => $professeur->paiementprofs->where('session_id', $session->id)->first()->mode->nom ?? 'N/A',
+                'date_paiement' => $professeur->paiementprofs->where('session_id', $session->id)->first()->date_paiement ?? 'N/A',
+            ];
+        });
+
+        return response()->json([
+            'professeurs' => $professeurs,
+            'prof_formation_nom' => $session->formation->nom,
+            'prof_session_nom' => $session->nom,
+            'total_profs' => $totalProfs,
+            'prof_total_montant_a_paye' => $totalMontantAPaye,
+            'prof_total_montant_paye' => $totalMontantPaye,
+            'prof_total_reste_a_payer' => $totalResteAPayer,
+        ]);
+    }
 
     public function getSessionDates($id)
     {
@@ -59,48 +187,43 @@ class SessionsController extends Component
         }
     }
 
-    public function addProfToSession(Request $request, $sessionId)
+    
+    public function addStudentToSession(Request $request, $sessionId)
     {
         $request->validate([
-            'prof_id' => 'required|exists:professeurs,id',
+            'etudiant_id' => 'required|exists:etudiants,id',
             'montant_paye' => 'required|numeric',
             'mode_paiement' => 'required|exists:modes_paiement,id',
             'date_paiement' => 'required|date',
-            'montant' => 'required|numeric',
-            'montant_a_paye' => 'required|numeric',
-            'typeymntprofs_id' => 'required|exists:typeymntprofs,id',
+            'prix_reel' => 'required|numeric'
         ]);
 
         try {
             $session = Sessions::findOrFail($sessionId);
-            $profId = $request->prof_id;
+            $etudiantId = $request->etudiant_id;
 
-            if ($session->professeurs->contains($profId)) {
-                return response()->json(['error' => 'Le professeur est déjà inscrit dans cette session.'], 400);
-            }
-
-            $session->professeurs()->attach($profId, [
+            // Attach the student to the session with the payment date
+            $session->etudiants()->attach($etudiantId, [
                 'date_paiement' => $request->date_paiement,
             ]);
 
-            $paiementProf = new PaiementProf([
-                'prof_id' => $profId,
+            // Create a new Paiement record
+            $paiement = new Paiement([
+                'etudiant_id' => $etudiantId,
                 'session_id' => $sessionId,
-                'montant' => $request->montant,
-                'montant_a_paye' => $request->montant_a_paye,
+                'prix_reel' => $request->prix_reel,
                 'montant_paye' => $request->montant_paye,
                 'mode_paiement_id' => $request->mode_paiement,
                 'date_paiement' => $request->date_paiement,
-                'typeymntprofs_id' => $request->typeymntprofs_id,
             ]);
-            $paiementProf->save();
+            $paiement->save();
 
-            return response()->json(['success' => 'Professeur et paiement ajoutés avec succès']);
+            return response()->json(['success' => 'Étudiant et paiement ajoutés avec succès']);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Session non trouvée.'], 404);
+            return response()->json(['error' => 'Formation not found.'], 404);
         } catch (\Exception $e) {
-            Log::error('Error adding professor to session: ' . $e->getMessage());
-            return response()->json(['error' => 'Erreur lors de l\'ajout du professeur et du paiement: ' . $e->getMessage()], 500);
+            Log::error('Error adding student to Formation: ' . $e->getMessage());
+            return response()->json(['error' => 'Erreur lors de l\'ajout de l\'étudiant et du paiement: ' . $e->getMessage()], 500);
         }
     }
 
@@ -112,69 +235,6 @@ class SessionsController extends Component
         $isInSession = $session->professeurs->contains($profId);
 
         return response()->json(['isInSession' => $isInSession]);
-    }
-
-    public function getProfSessionContents($sessionId)
-    {
-        $session = Sessions::with(['professeurs' => function($query) {
-            $query->withPivot('date_paiement');
-        }, 'professeurs.paiements.mode', 'formation'])->find($sessionId);
-
-        if (!$session) {
-            return response()->json(['error' => 'Session non trouvée'], 404);
-        }
-
-        $professeurs = $session->professeurs->map(function($professeur) use ($session) {
-            $montantPaye = $professeur->paiements->where('session_id', $session->id)->sum('montant_paye');
-            $montant = $professeur->paiements->where('session_id', $session->id)->first()->montant ?? 0;
-            $montantAPaye = $professeur->paiements->where('session_id', $session->id)->first()->montant_a_paye ?? 0;
-            $resteAPayer = $montantAPaye - $montantPaye;
-
-            return [
-                'id' => $professeur->id,
-                'nomprenom' => $professeur->nomprenom ?? 'N/A',
-                'phone' => $professeur->phone ?? 'N/A',
-                'wtsp' => $professeur->wtsp ?? 'N/A',
-                'montant' => $montant,
-                'montant_a_paye' => $montantAPaye,
-                'montant_paye' => $montantPaye,
-                'reste_a_payer' => $resteAPayer,
-                'mode_paiement' => $professeur->paiements->where('session_id', $session->id)->first()->mode->nom ?? 'N/A',
-                'date_paiement' => $professeur->paiements->where('session_id', $session->id)->first()->date_paiement ?? 'N/A',
-            ];
-        });
-
-        return response()->json([
-            'professeurs' => $professeurs,
-            'formation_price' => $session->formation->prix,
-        ]);
-    }
-    
-    public function getProfDetails($sessionId, $profId)
-    {
-        try {
-            $professeur = Professeur::with(['paiements' => function ($query) use ($sessionId) {
-                $query->where('session_id', $sessionId);
-            }])->findOrFail($profId);
-            $session = Sessions::findOrFail($sessionId);
-    
-            $montantPaye = $professeur->paiements->sum('montant_paye');
-            $prixReel = $professeur->paiements->first()->montant ?? 0;
-            $resteAPayer = $prixReel - $montantPaye;
-    
-            return response()->json([
-                'success' => true,
-                'montant' => $prixReel,
-                'montant_a_paye' => $prixReel,
-                'montant_paye' => $montantPaye,
-                'reste_a_payer' => $resteAPayer
-            ]);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Professeur ou session non trouvé.'], 404);
-        } catch (\Exception $e) {
-            Log::error('Error fetching professor details: ' . $e->getMessage());
-            return response()->json(['error' => 'Erreur lors de la récupération des détails du professeur.'], 500);
-        }
     }
 
     public function getTotalStudentPayments($sessionId)
@@ -213,6 +273,11 @@ class SessionsController extends Component
             $session = Sessions::findOrFail($sessionId);
             $etudiant = Etudiant::findOrFail($etudiantId);
 
+            // Check if the student is already in the session
+            if ($session->etudiants()->where('etudiant_id', $etudiantId)->exists()) {
+                return response()->json(['error' => 'L\'étudiant est déjà inscrit dans cette session.'], 400);
+            }
+
             $session->etudiants()->attach($etudiantId, [
                 'date_paiement' => $request->date_paiement,
             ]);
@@ -229,50 +294,62 @@ class SessionsController extends Component
 
             return response()->json(['success' => 'Étudiant et paiement ajoutés avec succès']);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Session or student not found.'], 404);
+            return response()->json(['error' => 'Session ou étudiant non trouvé.'], 404);
         } catch (\Exception $e) {
-            Log::error('Error adding student to Formation: ' . $e->getMessage());
+            Log::error('Error adding student to session: ' . $e->getMessage());
             return response()->json(['error' => 'Erreur lors de l\'ajout de l\'étudiant et du paiement: ' . $e->getMessage()], 500);
         }
     }
 
-    public function getSessionContents($sessionId)
+    public function addProfToSession(Request $request, $sessionId)
     {
-        $session = Sessions::with(['etudiants' => function($query) {
-            $query->withPivot('date_paiement');
-        }, 'etudiants.paiements.mode', 'formation'])->find($sessionId);
-
-        if (!$session) {
-            return response()->json(['error' => 'Formation not found'], 404);
-        }
-
-        $etudiants = $session->etudiants->map(function($etudiant) use ($session) {
-            $montantPaye = $etudiant->paiements->where('session_id', $session->id)->sum('montant_paye');
-            $prixReel = $etudiant->paiements->where('session_id', $session->id)->first()->prix_reel ?? $session->formation->prix;
-            $resteAPayer = $prixReel - $montantPaye;
-
-            return [
-                'id' => $etudiant->id,
-                'nomprenom' => $etudiant->nomprenom,
-                'phone' => $etudiant->phone,
-                'wtsp' => $etudiant->wtsp,
-                'prix_formation' => $session->formation->prix,
-                'prix_reel' => $prixReel,
-                'montant_paye' => $montantPaye,
-                'reste_a_payer' => $resteAPayer,
-                'mode_paiement' => $etudiant->paiements->where('session_id', $session->id)->first()->mode->nom ?? '',
-                'date_paiement' => $etudiant->paiements->where('session_id', $session->id)->first()->date_paiement ?? '',
-            ];
-        });
-
-        return response()->json([
-            'etudiants' => $etudiants,
-            'formation_price' => $session->formation->prix,
+        $request->validate([
+            'prof_id' => 'required|exists:professeurs,id',
+            'montant_paye' => 'required|numeric',
+            'mode_paiement' => 'required|exists:modes_paiement,id',
+            'date_paiement' => 'required|date',
+            'montant' => 'required|numeric',
+            'montant_a_paye' => 'required|numeric',
+            'typeymntprofs_id' => 'required|exists:typeymntprofs,id',
         ]);
+
+        try {
+            $session = Sessions::findOrFail($sessionId);
+            $profId = $request->prof_id;
+
+            // Check if the professor is already in the session
+            if ($session->professeurs()->where('prof_id', $profId)->exists()) {
+                return response()->json(['error' => 'Le professeur est déjà inscrit dans cette session.'], 400);
+            }
+
+            $session->professeurs()->attach($profId, [
+                'date_paiement' => $request->date_paiement,
+            ]);
+
+            $paiementProf = new PaiementProf([
+                'prof_id' => $profId,
+                'session_id' => $sessionId,
+                'montant' => $request->montant,
+                'montant_a_paye' => $request->montant_a_paye,
+                'montant_paye' => $request->montant_paye,
+                'mode_paiement_id' => $request->mode_paiement,
+                'date_paiement' => $request->date_paiement,
+                'typeymntprofs_id' => $request->typeymntprofs_id,
+            ]);
+            $paiementProf->save();
+
+            return response()->json(['success' => 'Professeur et paiement ajoutés avec succès']);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Session non trouvée.'], 404);
+        } catch (\Exception $e) {
+            Log::error('Error adding professor to session: ' . $e->getMessage());
+            return response()->json(['error' => 'Erreur lors de l\'ajout du professeur et du paiement: ' . $e->getMessage()], 500);
+        }
     }
 
     public function getStudentDetails($sessionId, $etudiantId)
     {
+        
         try {
             $etudiant = Etudiant::with(['paiements' => function ($query) use ($sessionId) {
                 $query->where('session_id', $sessionId);
@@ -297,6 +374,62 @@ class SessionsController extends Component
         }
     }
 
+
+    public function getSessionContents($sessionId)
+    {
+        $session = Sessions::with(['etudiants' => function($query) {
+            $query->withPivot('date_paiement');
+        }, 'etudiants.paiements.mode', 'formation', 'professeurs'])->find($sessionId);
+
+        if (!$session) {
+            return response()->json(['error' => 'Session not found'], 404);
+        }
+
+        $uniqueEtudiants = $session->etudiants->unique('id');
+        $totalEtudiants = $uniqueEtudiants->count();
+        $totalPrixReel = $uniqueEtudiants->sum(function($etudiant) use ($sessionId) {
+            return $etudiant->paiements->where('session_id', $sessionId)->sum('prix_reel');
+        });
+        $totalMontantPaye = $uniqueEtudiants->sum(function($etudiant) use ($sessionId) {
+            return $etudiant->paiements->where('session_id', $sessionId)->sum('montant_paye');
+        });
+        $totalResteAPayer = $totalPrixReel - $totalMontantPaye;
+
+        $uniqueProfesseurs = $session->professeurs->unique('id');
+        $totalProfesseurs = $uniqueProfesseurs->count();
+
+        $etudiants = $uniqueEtudiants->map(function($etudiant) use ($session) {
+            $montantPaye = $etudiant->paiements->where('session_id', $session->id)->sum('montant_paye');
+            $prixReel = $etudiant->paiements->where('session_id', $session->id)->first()->prix_reel ?? $session->formation->prix;
+            $resteAPayer = $prixReel - $montantPaye;
+
+            return [
+                'id' => $etudiant->id,
+                'nomprenom' => $etudiant->nomprenom,
+                'phone' => $etudiant->phone,
+                'wtsp' => $etudiant->wtsp,
+                'prix_formation' => $session->formation->prix,
+                'prix_reel' => $prixReel,
+                'montant_paye' => $montantPaye,
+                'reste_a_payer' => $resteAPayer,
+                'mode_paiement' => $etudiant->paiements->where('session_id', $session->id)->first()->mode->nom ?? '',
+                'date_paiement' => $etudiant->paiements->where('session_id', $session->id)->first()->date_paiement ?? '',
+            ];
+        });
+
+        return response()->json([
+            'etudiants' => $etudiants,
+            'formation_nom' => $session->formation->nom,
+            'formation_price' => $session->formation->prix,
+            'session_nom' => $session->nom,
+            'total_etudiants' => $totalEtudiants,
+            'total_prix_reel' => $totalPrixReel,
+            'total_montant_paye' => $totalMontantPaye,
+            'total_reste_a_payer' => $totalResteAPayer,
+            'total_professeurs' => $totalProfesseurs,
+        ]);
+    }
+    
     public function addPaiement(Request $request, $sessionId)
     {
         Log::info('Received data:', $request->all());
@@ -305,12 +438,21 @@ class SessionsController extends Component
             'etudiant_id' => 'required|exists:etudiants,id',
             'montant_paye' => 'required|numeric',
             'mode_paiement' => 'required|exists:modes_paiement,id',
-            'date_paiement' => 'required|date',
+            'date_paiement' => 'required|date', // Ensure this field is validated
         ]);
 
         try {
             $etudiant = Etudiant::findOrFail($request->etudiant_id);
             $session = Sessions::findOrFail($sessionId);
+
+            // Vérifier si le lien existe déjà
+            $exists = $session->etudiants()->where('etudiant_id', $request->etudiant_id)->exists();
+
+            if (!$exists) {
+                $session->etudiants()->attach($request->etudiant_id, [
+                    'date_paiement' => $request->date_paiement,
+                ]);
+            }
 
             $paiement = new Paiement([
                 'etudiant_id' => $request->etudiant_id,
@@ -318,7 +460,7 @@ class SessionsController extends Component
                 'prix_reel' => $session->formation->prix,
                 'montant_paye' => $request->montant_paye,
                 'mode_paiement_id' => $request->mode_paiement,
-                'date_paiement' => $request->date_paiement,
+                'date_paiement' => $request->date_paiement, // Ensure this field is set
             ]);
             $paiement->save();
 
@@ -326,40 +468,6 @@ class SessionsController extends Component
         } catch (ModelNotFoundException $e) {
             Log::error('Model not found: ' . $e->getMessage());
             return response()->json(['error' => 'Formation ou Étudiant non trouvé.'], 404);
-        } catch (\Exception $e) {
-            Log::error('Error adding payment: ' . $e->getMessage());
-            return response()->json(['error' => 'Erreur lors de l\'ajout du paiement: ' . $e->getMessage()], 500);
-        }
-    }
-
-    public function addProfPaiement(Request $request, $sessionId)
-    {
-        Log::info('Received data:', $request->all());
-
-        $request->validate([
-            'prof_id' => 'required|exists:professeurs,id',
-            'montant_paye' => 'required|numeric',
-            'mode_paiement' => 'required|exists:modes_paiement,id',
-            'date_paiement' => 'required|date',
-        ]);
-
-        try {
-            $professeur = Professeur::findOrFail($request->prof_id);
-            $session = Sessions::findOrFail($sessionId);
-
-            $paiement = new PaiementProf([
-                'prof_id' => $request->prof_id,
-                'session_id' => $sessionId,
-                'montant_paye' => $request->montant_paye,
-                'mode_paiement_id' => $request->mode_paiement,
-                'date_paiement' => $request->date_paiement,
-            ]);
-            $paiement->save();
-
-            return response()->json(['success' => 'Paiement ajouté avec succès']);
-        } catch (ModelNotFoundException $e) {
-            Log::error('Model not found: ' . $e->getMessage());
-            return response()->json(['error' => 'Session ou Professeur non trouvé.'], 404);
         } catch (\Exception $e) {
             Log::error('Error adding payment: ' . $e->getMessage());
             return response()->json(['error' => 'Erreur lors de l\'ajout du paiement: ' . $e->getMessage()], 500);
@@ -379,13 +487,110 @@ class SessionsController extends Component
             return response()->json(['error' => 'Erreur lors de la suppression de l\'étudiant: ' . $e->getMessage()], 500);
         }
     }
-
-    public function getFormationDetails($id)
+    
+    public function generateReceipt($sessionId, $etudiantId)
     {
-        $formation = Formations::find($id);
-        return response()->json(['formation' => $formation]);
+        try {
+            $etudiant = Etudiant::findOrFail($etudiantId);
+            $session = Sessions::findOrFail($sessionId);
+            $paiement = Paiement::where('etudiant_id', $etudiantId)
+                ->where('session_id', $sessionId)
+                ->firstOrFail();
+
+            $montantPaye = $paiement->montant_paye;
+            $prixReel = $paiement->prix_reel;
+            $resteAPayer = $prixReel - $montantPaye;
+            $modePaiement = $paiement->mode->nom; // Access the mode name via the relationship
+
+            // Convert date_paiement to Carbon instance and set timezone to Africa/Nouakchott
+            $datePaiement = Carbon::parse($paiement->date_paiement)->setTimezone('Africa/Nouakchott');
+            $datePaiementFormatted = $datePaiement->format('d/m/Y');
+            $heurePaiement = $datePaiement->format('H:i');
+
+            // Convert dates to DateTime objects
+            $dateDebut = new \DateTime($session->date_debut);
+            $dateFin = new \DateTime($session->date_fin);
+
+            $data = [
+                'date' => now()->setTimezone('Africa/Nouakchott')->format('d/m/Y'),
+                'heure' => now()->setTimezone('Africa/Nouakchott')->format('H:i'),
+                'nom_prenom' => $etudiant->nomprenom,
+                'Telephone' => $etudiant->phone,
+                'prix_reel' => $prixReel,
+                'montant_paye' => $montantPaye,
+                'reste_a_payer' => $resteAPayer,
+                'Mode_peiment' => $modePaiement,
+                'formation' => $session->nom,
+                'date_debut' => $dateDebut->format('d/m/Y'),  // Ensure date is formatted correctly
+                'date_fin' => $dateFin->format('d/m/Y'),      // Ensure date is formatted correctly
+                'date_paiement' => $datePaiementFormatted,
+                'heure_paiement' => $heurePaiement,
+                'par' => Auth::user()->name,  // Get the name of the authenticated user
+                'signature' => 'Signature Autorisée',
+            ];
+
+            $pdf = PDF::loadView('livewire.example-laravel.receipt', $data);
+
+            return $pdf->download('reçu.pdf');
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Étudiant ou Session non trouvé'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Erreur lors de la génération du reçu: ' . $e->getMessage()], 500);
+        }
     }
 
+    public function generateProfReceipt($sessionId, $profId)
+    {
+        try {
+            $professeur = Professeur::findOrFail($profId);
+            $session = Sessions::findOrFail($sessionId);
+            $paiementProf = PaiementProf::where('prof_id', $profId)
+                ->where('session_id', $sessionId)
+                ->firstOrFail();
+
+            $montantPaye = $paiementProf->montant_paye;
+            $montantAPaye = $paiementProf->montant_a_paye;
+            $resteAPayer = $montantAPaye - $montantPaye;
+            $modePaiement = $paiementProf->mode ? $paiementProf->mode->nom : 'N/A';
+            $typePaiement = $paiementProf->typeymntprofs ? $paiementProf->typeymntprofs->type : 'N/A';
+
+            // Convert date_paiement to Carbon instance and set timezone to Africa/Nouakchott
+            $datePaiement = Carbon::parse($paiementProf->date_paiement)->setTimezone('Africa/Nouakchott');
+            $datePaiementFormatted = $datePaiement->format('d/m/Y');
+            $heurePaiement = $datePaiement->format('H:i');
+
+            // Convert dates to DateTime objects
+            $dateDebut = new \DateTime($session->date_debut);
+            $dateFin = new \DateTime($session->date_fin);
+
+            $data = [
+                'date' => now()->setTimezone('Africa/Nouakchott')->format('d/m/Y'),
+                'heure' => now()->setTimezone('Africa/Nouakchott')->format('H:i'),
+                'nom_prenom' => $professeur->nomprenom,
+                'telephone' => $professeur->phone,
+                'formation' => $session->nom,
+                'date_debut' => $dateDebut->format('d/m/Y'),
+                'date_fin' => $dateFin->format('d/m/Y'),
+                'mode_paiement' => $modePaiement,
+                'type_paiement' => $typePaiement,
+                'montant_paye' => $montantPaye,
+                'reste_a_payer' => $resteAPayer,
+                'date_paiement' => $datePaiementFormatted,
+                'heure_paiement' => $heurePaiement,
+                'par' => Auth::user()->name,
+                'signature' => 'Signature Autorisée',
+            ];
+
+            $pdf = PDF::loadView('livewire.example-laravel.prof_receipt', $data);
+
+            return $pdf->download('reçu_professeur.pdf');
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Professeur ou Session non trouvé'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Erreur lors de la génération du reçu: ' . $e->getMessage()], 500);
+        }
+    }
+    
     public function searchStudentByPhone(Request $request)
     {
         $phone = $request->phone;
@@ -403,9 +608,6 @@ class SessionsController extends Component
         return response()->json(['isInSession' => $isInSession]);
     }
 
-
-
-
     public function store(Request $request)
     {
         $request->validate([
@@ -422,7 +624,6 @@ class SessionsController extends Component
             return response()->json(['error' => $th->getMessage()], 500);
         }
     }
-
 
     public function update(Request $request, $id)
     {
@@ -443,8 +644,7 @@ class SessionsController extends Component
             return response()->json(['error' => $th->getMessage()], 500);
         }
     }
-    
-    
+
     public function destroy($id)
     {
         try {
@@ -459,8 +659,6 @@ class SessionsController extends Component
             return response()->json(['error' => $th->getMessage()], 500);
         }
     }
-    
-
 
     public function search6(Request $request)
     {
@@ -476,7 +674,6 @@ class SessionsController extends Component
         }
     }
 
-
     public function render()
     {
         return $this->list_session();
@@ -487,4 +684,3 @@ class SessionsController extends Component
         return Excel::download(new SessionsExport(), 'sessions.xlsx');
     }
 }
-

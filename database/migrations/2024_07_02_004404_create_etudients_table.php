@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('etudiants', function (Blueprint $table) {
             $table->id();
             $table->string('image')->nullable();
-            $table->integer('nni')->unique();
+            $table->string('nni', 10)->unique();
             $table->string('nomprenom');
             $table->string('diplome')->nullable();
             $table->string('genre');

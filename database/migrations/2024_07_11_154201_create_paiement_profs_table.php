@@ -18,7 +18,7 @@ return new class extends Migration
                 $table->integer('montant');
                 $table->integer('montant_a_paye');
                 $table->integer('montant_paye');
-                $table->date('date_paiement')->nullable();
+                $table->date('date_paiement');
                 $table->timestamps();
             });
         }

@@ -17,9 +17,17 @@ class Dashboard extends Component
     public $etudiantsParSession;
     public $professeursParSession;
     public $etudiantsEnCours;
+    public $profsEnCours;
     public $montantTotalFormationsEnCours;
     public $montantPaye;
     public $resteAPayer;
+    public $montantTotalFormationsTerminees;
+    public $montantPayeTermines;
+    public $paiementsTermines;
+    public $resteAPayerTermines;
+
+
+
 
     public function mount()
     {
@@ -35,6 +43,11 @@ class Dashboard extends Component
         $this->etudiantsParSession = Sessions::withCount('etudiants')->get(); // Nombre d'étudiants par session
         $this->professeursParSession = Sessions::withCount('professeurs')->get(); // Nombre de professeurs par session
         
+        $this->profsEnCours = Professeur::whereHas('sessions', function($query) {
+            $query->where('date_debut', '<=', Carbon::now())
+                  ->where('date_fin', '>=', Carbon::now());
+        })->count(); // Nombre d'étudiants en cours
+
         $this->etudiantsEnCours = Etudiant::whereHas('sessions', function($query) {
             $query->where('date_debut', '<=', Carbon::now())
                   ->where('date_fin', '>=', Carbon::now());
@@ -54,12 +67,6 @@ class Dashboard extends Component
             ->mergeBindings($distinctPaiements)
             ->sum('sub.prix_reel');
 
-        // Calcul du montant total des formations en cours
-        // $this->montantTotalFormationsEnCours = Sessions::join('formations', 'sessions.formation_id', '=', 'formations.id')
-        //                                                ->where('sessions.date_debut', '<=', Carbon::now())
-        //                                                ->where('sessions.date_fin', '>=', Carbon::now())
-        //                                                ->sum('formations.prix');
-        
         // Calcul du montant payé et du reste à payer
         $paiements = DB::table('paiements')
                        ->join('sessions', 'paiements.session_id', '=', 'sessions.id')
@@ -70,6 +77,30 @@ class Dashboard extends Component
 
         $this->montantPaye = $paiements->montant_paye ?? 0;
         $this->resteAPayer = $this->montantTotalFormationsEnCours - $this->montantPaye;
+
+
+
+        $distinctPaiementsTermines = DB::table('paiements')
+    ->join('sessions', 'paiements.session_id', '=', 'sessions.id')
+    ->where('sessions.date_fin', '<', Carbon::now())
+    ->select('paiements.session_id', 'paiements.etudiant_id', 'paiements.prix_reel')
+    ->distinct();
+
+    // Calcul du montant total en sommant les prix_reel distincts pour les sessions terminées
+    $this->montantTotalFormationsTerminees = DB::table(DB::raw("({$distinctPaiementsTermines->toSql()}) as sub"))
+        ->mergeBindings($distinctPaiementsTermines)
+        ->sum('sub.prix_reel');
+
+    // Calcul du montant payé et du reste à payer pour les sessions terminées
+    $paiementsTermines = DB::table('paiements')
+        ->join('sessions', 'paiements.session_id', '=', 'sessions.id')
+        ->where('sessions.date_fin', '<', Carbon::now())
+        ->select(DB::raw('SUM(paiements.montant_paye) as montant_paye'))
+        ->first();
+
+    $this->montantPayeTermines = $paiementsTermines->montant_paye ?? 0;
+    $this->resteAPayerTermines = $this->montantTotalFormationsTerminees - $this->montantPayeTermines;
+
     }
 
     public function render()

@@ -26,9 +26,10 @@ class Professeur extends Model
 
     public function sessions()
     {
-        return $this->belongsToMany(Sessions::class, 'prof_session', 'prof_id', 'session_id');
+        return $this->belongsToMany(Sessions::class, 'prof_session', 'prof_id', 'session_id')->withPivot('date_paiement')->withTimestamps();
     }
-    public function paiements()
+
+    public function paiementprofs()
     {
         return $this->hasMany(PaiementProf::class, 'prof_id');
     }

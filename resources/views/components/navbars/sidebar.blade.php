@@ -85,7 +85,16 @@
                     <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
                         <i class="material-icons opacity-10">payment</i>
                     </div>
-                    <span class="nav-link-text ms-1"><b>Paiements</b> </span>
+                    <span class="nav-link-text ms-1"><b>Paiements Etudiants</b> </span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white {{ Route::currentRouteName() == 'paiementprof-management' ? ' active bg-gradient-info' : '' }}  "
+                    href="{{ route('paiementprof-management') }}">
+                    <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
+                        <i class="material-icons opacity-10">payment</i>
+                    </div>
+                    <span class="nav-link-text ms-1"><b>Paiements Professeurs</b> </span>
                 </a>
             </li>
             <!-- <li class="nav-item">

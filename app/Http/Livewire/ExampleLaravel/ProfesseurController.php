@@ -27,8 +27,36 @@ class ProfesseurController extends Component
         $mode_paiement = ModePaiement::all();
         return view('livewire.example-laravel.prof-management', compact('profs', 'countries', 'typeymntprofs', 'mode_paiement'));
     }
-    
 
+    public function checkPhone(Request $request)
+    {
+        $query = Professeur::where('phone', $request->phone);
+        if ($request->has('prof_id')) {
+            $query->where('id', '!=', $request->prof_id);
+        }
+        $exists = $query->exists();
+        return response()->json(['exists' => $exists]);
+    }
+
+    public function checkEmail(Request $request)
+    {
+        $query = Professeur::where('email', $request->email);
+        if ($request->has('prof_id')) {
+            $query->where('id', '!=', $request->prof_id);
+        }
+        $exists = $query->exists();
+        return response()->json(['exists' => $exists]);
+    }
+
+    public function checkWtsp(Request $request)
+    {
+        $query = Professeur::where('wtsp', $request->wtsp);
+        if ($request->has('prof_id')) {
+            $query->where('id', '!=', $request->prof_id);
+        }
+        $exists = $query->exists();
+        return response()->json(['exists' => $exists]);
+    }
 
     public function store(Request $request)
     {
@@ -40,20 +68,20 @@ class ProfesseurController extends Component
             'lieunaissance' => 'nullable|string',
             'adress' => 'nullable|string',
             'datenaissance' => 'nullable|date',
-            'email' => 'nullable|email',
-            'phone' => 'required|digits:8|integer|gt:0',
-            'wtsp' => 'nullable|integer',
+            'email' => 'nullable|email|unique:professeurs,email',
+            'phone' => 'required|digits:8|integer|gt:0|unique:professeurs,phone',
+            'wtsp' => 'nullable|integer|unique:professeurs,wtsp',
             'country_id' => 'required|exists:countries,id',
             'type_id' => 'required|exists:typeymntprofs,id',
         ]);
 
         try {
             $imageName = $request->hasFile('image') ? time() . '.' . $request->image->extension() : null;
-        
+
             if ($imageName) {
                 $request->image->move(public_path('images'), $imageName);
             }
-        
+
             $prof = Professeur::create([
                 'image' => $imageName,
                 'nomprenom' => $request->nomprenom,
@@ -68,7 +96,7 @@ class ProfesseurController extends Component
                 'country_id' => $request->country_id,
                 'type_id' => $request->type_id,
             ]);
-        
+
             return response()->json(['success' => 'Professeur créé avec succès', 'prof' => $prof->load('country', 'type')]);
         } catch (ValidationException $e) {
             return response()->json(['error' => $e->errors()], 422);
@@ -80,7 +108,7 @@ class ProfesseurController extends Component
 
     public function update(Request $request, $id)
     {
-        $validated = $request->validate([
+        $request->validate([
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'nomprenom' => 'required|string',
             'diplome' => 'nullable|string',
@@ -88,9 +116,9 @@ class ProfesseurController extends Component
             'lieunaissance' => 'nullable|string',
             'adress' => 'nullable|string',
             'datenaissance' => 'nullable|date',
-            'email' => 'nullable|email',
-            'phone' => 'required|digits:8|integer|gt:0',
-            'wtsp' => 'nullable|integer',
+            'email' => 'nullable|email|unique:professeurs,email,' . $id,
+            'phone' => 'required|digits:8|integer|gt:0|unique:professeurs,phone,' . $id,
+            'wtsp' => 'nullable|integer|unique:professeurs,wtsp,' . $id,
             'country_id' => 'required|exists:countries,id',
             'type_id' => 'required|exists:typeymntprofs,id',
         ]);
@@ -101,10 +129,10 @@ class ProfesseurController extends Component
             if ($request->hasFile('image')) {
                 $imageName = time() . '.' . $request->image->getClientOriginalExtension();
                 $request->image->move(public_path('images'), $imageName);
-                $validated['image'] = $imageName;
+                $request->merge(['image' => $imageName]);
             }
 
-            $prof->update($validated);
+            $prof->update($request->all());
 
             return response()->json(['success' => 'Professeur modifié avec succès', 'prof' => $prof->load('country', 'type')]);
         } catch (ValidationException $e) {

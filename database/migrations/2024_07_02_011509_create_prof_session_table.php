@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('prof_session', function (Blueprint $table) {
             $table->foreignId('prof_id')->constrained('professeurs');
             $table->foreignId('session_id')->constrained('sessions');
-            $table->date('date_paiement')->nullable();
+            $table->date('date_paiement');
             $table->timestamps();
 
             $table->primary(['prof_id', 'session_id']);

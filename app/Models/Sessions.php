@@ -13,7 +13,7 @@ class Sessions extends Model
 
     public function professeurs()
     {
-        return $this->belongsToMany(Professeur::class, 'prof_session', 'session_id', 'prof_id');
+        return $this->belongsToMany(Professeur::class, 'prof_session', 'session_id', 'prof_id')->withPivot('date_paiement')->withTimestamps();
     }
 
     public function formation()
@@ -30,5 +30,9 @@ class Sessions extends Model
     {
         return $this->hasMany(Paiement::class);
     }
-}
 
+    public function paiementprofs()
+    {
+        return $this->hasMany(PaiementProf::class);
+    }
+}
