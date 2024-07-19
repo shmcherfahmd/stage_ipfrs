@@ -87,6 +87,7 @@
                         <div class="form-group col-md-6">
                             <label for="mode-paiement" class="form-label">Mode de Paiement:</label>
                             <select class="form-control" id="mode-paiement">
+                                <option value="">Sélectionner un mode du paiement</option>
                                 @foreach ($modes_paiement as $mode)
                                     <option value="{{ $mode->id }}">{{ $mode->nom }}</option>
                                 @endforeach
@@ -129,6 +130,7 @@
                 <div class="form-group">
                     <label for="mode-paiement" class="form-label">Mode de Paiement:</label>
                     <select class="form-control" id="mode-paiement">
+                        <option value="">Sélectionner un mode du paiement</option>
                         @foreach ($modes_paiement as $mode)
                             <option value="{{ $mode->id }}">{{ $mode->nom }}</option>
                         @endforeach
@@ -169,7 +171,7 @@
                         <div class="form-group col-md-4">
                             <label for="prof-typeymntprofs" class="form-label">Type de Paiement:</label>
                             <select class="form-control" id="prof-typeymntprofs" onchange="updatePaymentFields()">
-                                <option value="">Sélectionner un type de paiement</option>
+                                <option value="">Sélectionner un type de contrat</option>
                                 @foreach ($typeymntprofs as $type)
                                     <option value="{{ $type->id }}">{{ $type->type }}</option>
                                 @endforeach
@@ -192,6 +194,7 @@
                         <div class="form-group col-md-4">
                             <label for="prof-mode-paiement" class="form-label">Mode de Paiement:</label>
                             <select class="form-control" id="prof-mode-paiement">
+                                <option value="">Sélectionner un mode du paiement</option>
                                 @foreach ($modes_paiement as $mode)
                                     <option value="{{ $mode->id }}">{{ $mode->nom }}</option>
                                 @endforeach
@@ -235,6 +238,7 @@
                 <div class="mb-3">
                     <label for="prof-mode-paiement" class="form-label">Mode de Paiement</label>
                     <select class="form-select" id="prof-mode-paiement" required>
+                        <option value="">Sélectionner un mode du paiement</option>
                         @foreach ($modes_paiement as $mode)
                             <option value="{{ $mode->id }}">{{ $mode->nom }}</option>
                         @endforeach
@@ -887,6 +891,12 @@ $(document).ready(function () {
         }
     }
 
+    window.loadProfSessionDetails = function(sessionId) {
+    const today = new Date().toISOString().split('T')[0];
+    $('#prof-date-paiement').val(today); // Set Date de Paiement to today's date
+};
+
+
     window.openAddProfPaymentModal = function(profId, sessionId) {
         $.ajax({
             url: `/sessions/${sessionId}/profs/${profId}/details`,
@@ -968,23 +978,23 @@ $(document).ready(function () {
         });
     }
 
-    window.loadProfSessionDetails = function(sessionId) {
-        $.ajax({
-            url: `/sessions/${sessionId}/details`,
-            type: 'GET',
-            success: function(response) {
-                if (response.formation) {
-                    const today = new Date().toISOString().split('T')[0];
-                    $('#prof-date-paiement').val(today); // Set Date de Paiement to today's date
-                } else {
-                    $('#prof-montant').val(''); // Clear Montant if no formation data is found
-                }
-            },
-            error: function(xhr, status, error) {
-                alert('Erreur lors du chargement des détails de la session: ' + error);
-            }
-        });
-    }
+    // window.loadProfSessionDetails = function(sessionId) {
+    //     $.ajax({
+    //         url: `/sessions/${sessionId}/details`,
+    //         type: 'GET',
+    //         success: function(response) {
+    //             if (response.formation) {
+    //                 const today = new Date().toISOString().split('T')[0];
+    //                 $('#prof-date-paiement').val(today); // Set Date de Paiement to today's date
+    //             } else {
+    //                 $('#prof-montant').val(''); // Clear Montant if no formation data is found
+    //             }
+    //         },
+    //         error: function(xhr, status, error) {
+    //             alert('Erreur lors du chargement des détails de la session: ' + error);
+    //         }
+    //     });
+    // }
 
     window.updatePaymentFields = function() {
         const typeId = $('#prof-typeymntprofs').val();

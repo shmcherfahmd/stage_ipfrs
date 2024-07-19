@@ -60,6 +60,11 @@ class SessionsController extends Component
             return response()->json(['error' => 'Erreur lors de la récupération des détails du professeur.'], 500);
         }
     }
+    public function getFormationDetails($id)
+    {
+        $formation = Formations::find($id);
+        return response()->json(['formation' => $formation]);
+    }
 
 
     public function addProfPaiement(Request $request, $sessionId)
