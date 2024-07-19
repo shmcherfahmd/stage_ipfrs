@@ -53,6 +53,9 @@ Route::get('/', function(){
 });
 
 
+// web.php
+Route::get('/sessions/{id}', [SessionsController::class, 'show']);
+Route::put('/sessions/{id}', [SessionsController::class, 'update']);
 
 //Paiement routes
 
