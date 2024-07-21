@@ -115,56 +115,109 @@ class SessionsController extends Component
     }
 
 
+    // public function getProfSessionContents($sessionId)
+    // {
+    //     $session = Sessions::with(['professeurs' => function($query) {
+    //         $query->withPivot('date_paiement');
+    //     }, 'professeurs.paiementprofs.mode', 'formation'])->find($sessionId);
+
+    //     if (!$session) {
+    //         return response()->json(['error' => 'Session non trouvée'], 404);
+    //     }
+
+    //     $uniqueProfs = $session->professeurs->unique('id');
+    //     $totalProfs = $uniqueProfs->count();
+    //     $totalMontantAPaye = $uniqueProfs->sum(function($prof) use ($sessionId) {
+    //         return $prof->paiementprofs->where('session_id', $sessionId)->sum('montant_a_paye');
+    //     });
+    //     $totalMontantPaye = $uniqueProfs->sum(function($prof) use ($sessionId) {
+    //         return $prof->paiementprofs->where('session_id', $sessionId)->sum('montant_paye');
+    //     });
+    //     $totalResteAPayer = $totalMontantAPaye - $totalMontantPaye;
+
+    //     $professeurs = $session->professeurs->map(function($professeur) use ($session) {
+    //         $montantPaye = $professeur->paiementprofs->where('session_id', $session->id)->sum('montant_paye');
+    //         $montant = $professeur->paiementprofs->where('session_id', $session->id)->first()->montant ?? 0;
+    //         $montantAPaye = $professeur->paiementprofs->where('session_id', $session->id)->first()->montant_a_paye ?? 0;
+    //         $resteAPayer = $montantAPaye - $montantPaye;
+
+    //         return [
+    //             'id' => $professeur->id,
+    //             'nomprenom' => $professeur->nomprenom ?? 'N/A',
+    //             'phone' => $professeur->phone ?? 'N/A',
+    //             'wtsp' => $professeur->wtsp ?? 'N/A',
+    //             'montant' => $montant,
+    //             'montant_a_paye' => $montantAPaye,
+    //             'montant_paye' => $montantPaye,
+    //             'reste_a_payer' => $resteAPayer,
+    //             'mode_paiement' => $professeur->paiementprofs->where('session_id', $session->id)->first()->mode->nom ?? 'N/A',
+    //             'date_paiement' => $professeur->paiementprofs->where('session_id', $session->id)->first()->date_paiement ?? 'N/A',
+    //         ];
+    //     });
+
+    //     return response()->json([
+    //         'professeurs' => $professeurs,
+    //         'prof_formation_nom' => $session->formation->nom,
+    //         'prof_session_nom' => $session->nom,
+    //         'total_profs' => $totalProfs,
+    //         'prof_total_montant_a_paye' => $totalMontantAPaye,
+    //         'prof_total_montant_paye' => $totalMontantPaye,
+    //         'prof_total_reste_a_payer' => $totalResteAPayer,
+    //     ]);
+    // }
     public function getProfSessionContents($sessionId)
-    {
-        $session = Sessions::with(['professeurs' => function($query) {
-            $query->withPivot('date_paiement');
-        }, 'professeurs.paiementprofs.mode', 'formation'])->find($sessionId);
+{
+    $session = Sessions::with(['professeurs.paiementprofs.mode', 'formation'])->find($sessionId);
 
-        if (!$session) {
-            return response()->json(['error' => 'Session non trouvée'], 404);
-        }
-
-        $uniqueProfs = $session->professeurs->unique('id');
-        $totalProfs = $uniqueProfs->count();
-        $totalMontantAPaye = $uniqueProfs->sum(function($prof) use ($sessionId) {
-            return $prof->paiementprofs->where('session_id', $sessionId)->sum('montant_a_paye');
-        });
-        $totalMontantPaye = $uniqueProfs->sum(function($prof) use ($sessionId) {
-            return $prof->paiementprofs->where('session_id', $sessionId)->sum('montant_paye');
-        });
-        $totalResteAPayer = $totalMontantAPaye - $totalMontantPaye;
-
-        $professeurs = $session->professeurs->map(function($professeur) use ($session) {
-            $montantPaye = $professeur->paiementprofs->where('session_id', $session->id)->sum('montant_paye');
-            $montant = $professeur->paiementprofs->where('session_id', $session->id)->first()->montant ?? 0;
-            $montantAPaye = $professeur->paiementprofs->where('session_id', $session->id)->first()->montant_a_paye ?? 0;
-            $resteAPayer = $montantAPaye - $montantPaye;
-
-            return [
-                'id' => $professeur->id,
-                'nomprenom' => $professeur->nomprenom ?? 'N/A',
-                'phone' => $professeur->phone ?? 'N/A',
-                'wtsp' => $professeur->wtsp ?? 'N/A',
-                'montant' => $montant,
-                'montant_a_paye' => $montantAPaye,
-                'montant_paye' => $montantPaye,
-                'reste_a_payer' => $resteAPayer,
-                'mode_paiement' => $professeur->paiementprofs->where('session_id', $session->id)->first()->mode->nom ?? 'N/A',
-                'date_paiement' => $professeur->paiementprofs->where('session_id', $session->id)->first()->date_paiement ?? 'N/A',
-            ];
-        });
-
-        return response()->json([
-            'professeurs' => $professeurs,
-            'prof_formation_nom' => $session->formation->nom,
-            'prof_session_nom' => $session->nom,
-            'total_profs' => $totalProfs,
-            'prof_total_montant_a_paye' => $totalMontantAPaye,
-            'prof_total_montant_paye' => $totalMontantPaye,
-            'prof_total_reste_a_payer' => $totalResteAPayer,
-        ]);
+    if (!$session) {
+        return response()->json(['error' => 'Session non trouvée'], 404);
     }
+
+    $uniqueProfs = $session->professeurs->unique('id');
+    $totalProfs = $uniqueProfs->count();
+
+    // Calculer le total du montant à payer une seule fois par professeur dans chaque session
+    $totalMontantAPaye = $uniqueProfs->sum(function($prof) use ($sessionId) {
+        return $prof->paiementprofs->where('session_id', $sessionId)->unique('prof_id')->sum('montant_a_paye');
+    });
+
+    $totalMontantPaye = $uniqueProfs->sum(function($prof) use ($sessionId) {
+        return $prof->paiementprofs->where('session_id', $sessionId)->sum('montant_paye');
+    });
+
+    $totalResteAPayer = $totalMontantAPaye - $totalMontantPaye;
+
+    $professeurs = $uniqueProfs->map(function($professeur) use ($session) {
+        $montantPaye = $professeur->paiementprofs->where('session_id', $session->id)->sum('montant_paye');
+        $montant = $professeur->paiementprofs->where('session_id', $session->id)->first()->montant ?? 0;
+        $montantAPaye = $professeur->paiementprofs->where('session_id', $session->id)->first()->montant_a_paye ?? 0;
+        $resteAPayer = $montantAPaye - $montantPaye;
+
+        return [
+            'id' => $professeur->id,
+            'nomprenom' => $professeur->nomprenom ?? 'N/A',
+            'phone' => $professeur->phone ?? 'N/A',
+            'wtsp' => $professeur->wtsp ?? 'N/A',
+            'montant' => $montant,
+            'montant_a_paye' => $montantAPaye,
+            'montant_paye' => $montantPaye,
+            'reste_a_payer' => $resteAPayer,
+            'mode_paiement' => $professeur->paiementprofs->where('session_id', $session->id)->first()->mode->nom ?? 'N/A',
+            'date_paiement' => $professeur->paiementprofs->where('session_id', $session->id)->first()->date_paiement ?? 'N/A',
+        ];
+    });
+
+    return response()->json([
+        'professeurs' => $professeurs,
+        'prof_formation_nom' => $session->formation->nom,
+        'prof_session_nom' => $session->nom,
+        'total_profs' => $totalProfs,
+        'prof_total_montant_a_paye' => $totalMontantAPaye,
+        'prof_total_montant_paye' => $totalMontantPaye,
+        'prof_total_reste_a_payer' => $totalResteAPayer,
+    ]);
+}
+
 
     public function getSessionDates($id)
     {
@@ -380,65 +433,124 @@ class SessionsController extends Component
     }
 
 
+    // public function getSessionContents($sessionId)
+    // {
+    //     $session = Sessions::with(['etudiants' => function($query) {
+    //         $query->withPivot('date_paiement');
+    //     }, 'etudiants.paiements.mode', 'formation', 'professeurs'])->find($sessionId);
+
+    //     if (!$session) {
+    //         return response()->json(['error' => 'Session not found'], 404);
+    //     }
+
+    //     $uniqueEtudiants = $session->etudiants->unique('id');
+    //     $totalEtudiants = $uniqueEtudiants->count();
+    //     $totalPrixReel = $uniqueEtudiants->sum(function($etudiant) use ($sessionId) {
+    //         return $etudiant->paiements->where('session_id', $sessionId)->sum('prix_reel');
+    //     });
+    //     $totalMontantPaye = $uniqueEtudiants->sum(function($etudiant) use ($sessionId) {
+    //         return $etudiant->paiements->where('session_id', $sessionId)->sum('montant_paye');
+    //     });
+    //     $totalResteAPayer = $totalPrixReel - $totalMontantPaye;
+
+    //     $uniqueProfesseurs = $session->professeurs->unique('id');
+    //     $totalProfesseurs = $uniqueProfesseurs->count();
+
+    //     $etudiants = $uniqueEtudiants->map(function($etudiant) use ($session) {
+    //         $montantPaye = $etudiant->paiements->where('session_id', $session->id)->sum('montant_paye');
+    //         $prixReel = $etudiant->paiements->where('session_id', $session->id)->first()->prix_reel ?? $session->formation->prix;
+    //         $resteAPayer = $prixReel - $montantPaye;
+
+    //         return [
+    //             'id' => $etudiant->id,
+    //             'nomprenom' => $etudiant->nomprenom,
+    //             'phone' => $etudiant->phone,
+    //             'wtsp' => $etudiant->wtsp,
+    //             'prix_formation' => $session->formation->prix,
+    //             'prix_reel' => $prixReel,
+    //             'montant_paye' => $montantPaye,
+    //             'reste_a_payer' => $resteAPayer,
+    //             'mode_paiement' => $etudiant->paiements->where('session_id', $session->id)->first()->mode->nom ?? '',
+    //             'date_paiement' => $etudiant->paiements->where('session_id', $session->id)->first()->date_paiement ?? '',
+    //         ];
+    //     });
+
+    //     return response()->json([
+    //         'etudiants' => $etudiants,
+    //         'formation_nom' => $session->formation->nom,
+    //         'formation_price' => $session->formation->prix,
+    //         'session_nom' => $session->nom,
+    //         'total_etudiants' => $totalEtudiants,
+    //         'total_prix_reel' => $totalPrixReel,
+    //         'total_montant_paye' => $totalMontantPaye,
+    //         'total_reste_a_payer' => $totalResteAPayer,
+    //         'total_professeurs' => $totalProfesseurs,
+    //     ]);
+    // }
+
     public function getSessionContents($sessionId)
-    {
-        $session = Sessions::with(['etudiants' => function($query) {
-            $query->withPivot('date_paiement');
-        }, 'etudiants.paiements.mode', 'formation', 'professeurs'])->find($sessionId);
+{
+    $session = Sessions::with(['etudiants.paiements.mode', 'formation', 'professeurs'])->find($sessionId);
 
-        if (!$session) {
-            return response()->json(['error' => 'Session not found'], 404);
-        }
-
-        $uniqueEtudiants = $session->etudiants->unique('id');
-        $totalEtudiants = $uniqueEtudiants->count();
-        $totalPrixReel = $uniqueEtudiants->sum(function($etudiant) use ($sessionId) {
-            return $etudiant->paiements->where('session_id', $sessionId)->sum('prix_reel');
-        });
-        $totalMontantPaye = $uniqueEtudiants->sum(function($etudiant) use ($sessionId) {
-            return $etudiant->paiements->where('session_id', $sessionId)->sum('montant_paye');
-        });
-        $totalResteAPayer = $totalPrixReel - $totalMontantPaye;
-
-        $uniqueProfesseurs = $session->professeurs->unique('id');
-        $totalProfesseurs = $uniqueProfesseurs->count();
-
-        $etudiants = $uniqueEtudiants->map(function($etudiant) use ($session) {
-            $montantPaye = $etudiant->paiements->where('session_id', $session->id)->sum('montant_paye');
-            $prixReel = $etudiant->paiements->where('session_id', $session->id)->first()->prix_reel ?? $session->formation->prix;
-            $resteAPayer = $prixReel - $montantPaye;
-
-            return [
-                'id' => $etudiant->id,
-                'nomprenom' => $etudiant->nomprenom,
-                'phone' => $etudiant->phone,
-                'wtsp' => $etudiant->wtsp,
-                'prix_formation' => $session->formation->prix,
-                'prix_reel' => $prixReel,
-                'montant_paye' => $montantPaye,
-                'reste_a_payer' => $resteAPayer,
-                'mode_paiement' => $etudiant->paiements->where('session_id', $session->id)->first()->mode->nom ?? '',
-                'date_paiement' => $etudiant->paiements->where('session_id', $session->id)->first()->date_paiement ?? '',
-            ];
-        });
-
-        return response()->json([
-            'etudiants' => $etudiants,
-            'formation_nom' => $session->formation->nom,
-            'formation_price' => $session->formation->prix,
-            'session_nom' => $session->nom,
-            'total_etudiants' => $totalEtudiants,
-            'total_prix_reel' => $totalPrixReel,
-            'total_montant_paye' => $totalMontantPaye,
-            'total_reste_a_payer' => $totalResteAPayer,
-            'total_professeurs' => $totalProfesseurs,
-        ]);
+    if (!$session) {
+        return response()->json(['error' => 'Session not found'], 404);
     }
+
+    $uniqueEtudiants = $session->etudiants->unique('id');
+    $totalEtudiants = $uniqueEtudiants->count();
+
+    // Calculer le total des prix réels une seule fois par étudiant dans chaque session
+    $totalPrixReel = $uniqueEtudiants->sum(function($etudiant) use ($sessionId) {
+        return $etudiant->paiements->where('session_id', $sessionId)->unique('etudiant_id')->sum('prix_reel');
+    });
+
+    $totalMontantPaye = $uniqueEtudiants->sum(function($etudiant) use ($sessionId) {
+        return $etudiant->paiements->where('session_id', $sessionId)->sum('montant_paye');
+    });
+
+    $totalResteAPayer = $totalPrixReel - $totalMontantPaye;
+
+    $uniqueProfesseurs = $session->professeurs->unique('id');
+    $totalProfesseurs = $uniqueProfesseurs->count();
+
+    $etudiants = $uniqueEtudiants->map(function($etudiant) use ($session) {
+        $montantPaye = $etudiant->paiements->where('session_id', $session->id)->sum('montant_paye');
+        $prixReel = $etudiant->paiements->where('session_id', $session->id)->first()->prix_reel ?? $session->formation->prix;
+        $resteAPayer = $prixReel - $montantPaye;
+
+        return [
+            'id' => $etudiant->id,
+            'nomprenom' => $etudiant->nomprenom,
+            'phone' => $etudiant->phone,
+            'wtsp' => $etudiant->wtsp,
+            'prix_formation' => $session->formation->prix,
+            'prix_reel' => $prixReel,
+            'montant_paye' => $montantPaye,
+            'reste_a_payer' => $resteAPayer,
+            'mode_paiement' => $etudiant->paiements->where('session_id', $session->id)->first()->mode->nom ?? '',
+            'date_paiement' => $etudiant->paiements->where('session_id', $session->id)->first()->date_paiement ?? '',
+        ];
+    });
+
+    return response()->json([
+        'etudiants' => $etudiants,
+        'formation_nom' => $session->formation->nom,
+        'formation_price' => $session->formation->prix,
+        'session_nom' => $session->nom,
+        'total_etudiants' => $totalEtudiants,
+        'total_prix_reel' => $totalPrixReel,
+        'total_montant_paye' => $totalMontantPaye,
+        'total_reste_a_payer' => $totalResteAPayer,
+        'total_professeurs' => $totalProfesseurs,
+    ]);
+}
+
     
     public function addPaiement(Request $request, $sessionId)
     {
         Log::info('Received data:', $request->all());
-
+        // $request['mode_paiement']=1;
+        // $request['date_paiement']='2024-07-19';
         $request->validate([
             'etudiant_id' => 'required|exists:etudiants,id',
             'montant_paye' => 'required|numeric',

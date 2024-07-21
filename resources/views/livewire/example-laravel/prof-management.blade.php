@@ -298,6 +298,83 @@
                     }
                 });
             });
+            $('body').on('click', '.detail-prof', function() { // Change to class selector
+                var profId = $(this).data('id');
+                fetchProfDetails(profId);
+            });
+
+            function fetchProfDetails(profId) {
+                $.ajax({
+                    url: `/profs/${profId}/details`,
+                    type: 'GET',
+                    success: function(response) {
+                        if (response.error) {
+                            iziToast.error({ message: response.error, position: 'topRight' });
+                            return;
+                        }
+
+                        let formationsHtml = '';
+                        if (response.formations.length > 0) {
+                            formationsHtml = `
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Formation</th>
+                                            <th>Montant à Payer</th>
+                                            <th>Montant Payé</th>
+                                            <th>Reste à Payer</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${response.formations.map(formation => `
+                                            <tr>
+                                                <td>${formation.nom} <span style="font-style: italic; color: ${formation.statut === 'En cours' ? 'green' : 'red'};">(${formation.statut})</span></td>
+                                                <td>${formation.montant_a_paye}</td>
+                                                <td>${formation.montant_paye}</td>
+                                                <td>${formation.reste_a_payer}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            `;
+                        } else {
+                            formationsHtml = '<div class="row"><div class="col-md-12"><center>Aucune formation inscrite.</center></div></div>';
+                        }
+
+                        var detailsHtml = `
+                            <div class="modal fade" id="profDetailsModal" tabindex="-1" aria-labelledby="profDetailsModalLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="profDetailsModalLabel">Détails duprofesseur</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="row mb-2">
+                                                <div class="col-md-6"><strong>Nom & Prénom:</strong> ${response.prof.nomprenom}</div>
+                                                <div class="col-md-6"><strong>Numéro de Téléphone:</strong> ${response.prof.phone}</div>
+                                            </div>
+                                            <hr>
+                                            ${formationsHtml}
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+
+                        // Remove any existing modals before appending a new one
+                        $('#profDetailsModal').remove();
+                        $('body').append(detailsHtml);
+                        $('#profDetailsModal').modal('show');
+                    },
+                    error: function(xhr, status, error) {
+                        iziToast.error({ message: 'Erreur lors de la récupération des détails: ' + error, position: 'topRight' });
+                    }
+                });
+            }
 
             function phoneExists(phone, profId = null) {
                 let exists = false;

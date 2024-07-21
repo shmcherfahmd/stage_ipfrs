@@ -25,29 +25,57 @@ class EtudiantController extends Component
         return view('livewire.example-laravel.etudiant-management', compact('etudiants', 'countries'));
     }
 
-    public function getEtudiantDetails($etudiantId)
-    {
-        try {
-            $etudiant = Etudiant::findOrFail($etudiantId);
-            $formations = $etudiant->sessions->map(function ($session) use ($etudiantId) {
-                $paiement = Paiement::where('etudiant_id', $etudiantId)->where('session_id', $session->id)->first();
-                return [
-                    'nom' => $session->nom,
-                    'montant_paye' => $paiement ? $paiement->montant_paye : 0,
-                    'reste_a_payer' => $paiement ? $paiement->prix_reel - $paiement->montant_paye : 0,
-                ];
-            });
+    // public function getEtudiantDetails($etudiantId)
+    // {
+    //     try {
+    //         $etudiant = Etudiant::findOrFail($etudiantId);
+    //         $formations = $etudiant->sessions->map(function ($session) use ($etudiantId) {
+    //             $paiement = Paiement::where('etudiant_id', $etudiantId)->where('session_id', $session->id)->first();
+    //             return [
+    //                 'nom' => $session->nom,
+    //                 'prix_reel' => $paiement ? $paiement->prix_reel : 0,
+    //                 'montant_paye' => $paiement ? $paiement->montant_paye : 0,
+    //                 'reste_a_payer' => $paiement ? $paiement->prix_reel - $paiement->montant_paye : 0,
+    //             ];
+    //         });
     
-            return response()->json([
-                'etudiant' => $etudiant,
-                'formations' => $formations,
-            ]);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Étudiant non trouvé'], 404);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Erreur lors de la récupération des détails: ' . $e->getMessage()], 500);
-        }
+    //         return response()->json([
+    //             'etudiant' => $etudiant,
+    //             'formations' => $formations,
+    //         ]);
+    //     } catch (ModelNotFoundException $e) {
+    //         return response()->json(['error' => 'Étudiant non trouvé'], 404);
+    //     } catch (\Exception $e) {
+    //         return response()->json(['error' => 'Erreur lors de la récupération des détails: ' . $e->getMessage()], 500);
+    //     }
+    // }
+    public function getEtudiantDetails($etudiantId)
+{
+    try {
+        $etudiant = Etudiant::findOrFail($etudiantId);
+        $formations = $etudiant->sessions->map(function ($session) use ($etudiantId) {
+            $paiement = Paiement::where('etudiant_id', $etudiantId)->where('session_id', $session->id)->first();
+            $statut = (now()->between($session->date_debut, $session->date_fin)) ? 'En cours' : 'Terminé';
+            return [
+                'nom' => $session->nom,
+                'prix_reel' => $paiement ? $paiement->prix_reel : 0,
+                'montant_paye' => $paiement ? $paiement->montant_paye : 0,
+                'reste_a_payer' => $paiement ? $paiement->prix_reel - $paiement->montant_paye : 0,
+                'statut' => $statut,
+            ];
+        });
+
+        return response()->json([
+            'etudiant' => $etudiant,
+            'formations' => $formations,
+        ]);
+    } catch (ModelNotFoundException $e) {
+        return response()->json(['error' => 'Étudiant non trouvé'], 404);
+    } catch (\Exception $e) {
+        return response()->json(['error' => 'Erreur lors de la récupération des détails: ' . $e->getMessage()], 500);
     }
+}
+
 
     public function checkNni(Request $request)
     {

@@ -302,6 +302,65 @@ $(document).ready(function() {
     });
 });
 
+// function fetchEtudiantDetails(etudiantId) {
+//     $.ajax({
+//         url: `/etudiants/${etudiantId}/details`,
+//         type: 'GET',
+//         success: function(response) {
+//             if (response.error) {
+//                 iziToast.error({ message: response.error, position: 'topRight' });
+//                 return;
+//             }
+
+//             let formationsHtml = '';
+//             if (response.formations.length > 0) {
+//                 formationsHtml = response.formations.map(formation => `
+//                     <div class="row mb-4">
+//                         <div class="col-md-3"><strong>Formation:</strong> ${formation.nom}</div>
+//                         <div class="col-md-3"><strong>Montant à Payer:</strong> ${formation.prix_reel}</div>
+//                         <div class="col-md-3"><strong>Montant Payé:</strong> ${formation.montant_paye}</div>
+//                         <div class="col-md-3"><strong>Reste à Payer:</strong> ${formation.reste_a_payer}</div>
+//                     </div>
+//                 `).join('');
+//             } else {
+//                 formationsHtml = '<div class="row"><div class="col-md-12">Aucune formation inscrite.</div></div>';
+//             }
+
+//             var detailsHtml = `
+//                 <div class="modal fade" id="etudiantDetailsModal" tabindex="-1" aria-labelledby="etudiantDetailsModalLabel" aria-hidden="true">
+//                     <div class="modal-dialog modal-lg">
+//                         <div class="modal-content">
+//                             <div class="modal-header">
+//                                 <h5 class="modal-title" id="etudiantDetailsModalLabel">Détails de l'étudiant</h5>
+//                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+//                             </div>
+//                             <div class="modal-body">
+//                                 <div class="row mb-2">
+//                                     <div class="col-md-6"><strong>Nom & Prénom:</strong> ${response.etudiant.nomprenom}</div>
+//                                     <div class="col-md-6"><strong>Numéro de Téléphone:</strong> ${response.etudiant.phone}</div>
+//                                 </div>
+//                                 <hr>
+//                                 ${formationsHtml}
+//                             </div>
+//                             <div class="modal-footer">
+//                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+//                             </div>
+//                         </div>
+//                     </div>
+//                 </div>
+//             `;
+
+//             // Remove any existing modals before appending a new one
+//             $('#etudiantDetailsModal').remove();
+//             $('body').append(detailsHtml);
+//             $('#etudiantDetailsModal').modal('show');
+//         },
+//         error: function(xhr, status, error) {
+//             iziToast.error({ message: 'Erreur lors de la récupération des détails: ' + error, position: 'topRight' });
+//         }
+//     });
+// }
+
 function fetchEtudiantDetails(etudiantId) {
     $.ajax({
         url: `/etudiants/${etudiantId}/details`,
@@ -314,15 +373,30 @@ function fetchEtudiantDetails(etudiantId) {
 
             let formationsHtml = '';
             if (response.formations.length > 0) {
-                formationsHtml = response.formations.map(formation => `
-                    <div class="row mb-2">
-                        <div class="col-md-4"><strong>Formation:</strong> ${formation.nom}</div>
-                        <div class="col-md-4"><strong>Montant Payé:</strong> ${formation.montant_paye}</div>
-                        <div class="col-md-4"><strong>Reste à Payer:</strong> ${formation.reste_a_payer}</div>
-                    </div>
-                `).join('');
+                formationsHtml = `
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Formation</th>
+                                <th>Montant à Payer</th>
+                                <th>Montant Payé</th>
+                                <th>Reste à Payer</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${response.formations.map(formation => `
+                                <tr>
+                                    <td>${formation.nom} <span style="font-style: italic; color: ${formation.statut === 'En cours' ? 'green' : 'red'};">(${formation.statut})</span></td>
+                                    <td>${formation.prix_reel}</td>
+                                    <td>${formation.montant_paye}</td>
+                                    <td>${formation.reste_a_payer}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
             } else {
-                formationsHtml = '<div class="row"><div class="col-md-12">Aucune formation inscrite.</div></div>';
+                formationsHtml = '<div class="row"><div class="col-md-12"><center>Aucune formation inscrite.</center></div></div>';
             }
 
             var detailsHtml = `
@@ -359,6 +433,9 @@ function fetchEtudiantDetails(etudiantId) {
         }
     });
 }
+
+
+
 
     // Initialize DataTable
     $(document).ready(function() {

@@ -219,6 +219,8 @@ Route::get('/search3', [ContenusFormationController::class, 'search3'])->name('s
 
 
 Route::get('/etudiants/{etudiantId}/details', [EtudiantController::class, 'getEtudiantDetails']);
+Route::get('/profs/{profId}/details', [ProfesseurController::class, 'getProfDetails']);
+
 //Etudiant routes
 Route::get('/etudiants', [EtudiantController::class, 'liste_etudiant'])->name('etudiant.list');
 Route::post('etudiants', [EtudiantController::class, 'store'])->name('etudiant.store');
@@ -282,8 +284,11 @@ Route::delete('/formations/{id}/confirm-delete', [FormationsController::class, '
 
 
 
-
-
+Route::prefix('contenus')->group(function () {
+    // Route::post('/store', [ContenusFormationController::class, 'store'])->name('contenus.store');
+    Route::put('/update/{id}', [ContenusFormationController::class, 'update'])->name('contenus.update');
+    Route::get('/{id}', [ContenusFormationController::class, 'show'])->name('contenus.show');
+});
 Route::get('contenus', [ContenusFormationController::class, 'liste_contenue'])->name('contenus-management');
 Route::post('contenus/store', [ContenusFormationController::class, 'store'])->name('contenus.store');
 Route::get('contenus/{id}', [ContenusFormationController::class, 'show']);

@@ -162,9 +162,9 @@ class FormationsController extends Component
         return response()->json(['contenus' => $formation->contenusFormation]);
     }
     public function getContents($formationId)
-{
-    $contenus = ContenusFormation::where('formation_id', $formationId)->get();
-    return response()->json(['contenus' => $contenus]);
-}
+    {
+        $contenus = ContenusFormation::where('formation_id', $formationId)->get();
+        return response()->json(['contenus' => $contenus]);
+    }
 
 }

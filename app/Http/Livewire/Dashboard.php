@@ -55,12 +55,23 @@ class Dashboard extends Component
 
 
         // Sous-requête pour obtenir les montants distincts par session et par étudiant
+        // $distinctPaiements = DB::table('paiements')
+        //     ->join('sessions', 'paiements.session_id', '=', 'sessions.id')
+        //     // ->where('sessions.date_debut', '<=', Carbon::now())
+        //     ->where('sessions.date_fin', '>=', Carbon::now())
+        //     ->select('paiements.session_id', 'paiements.etudiant_id', 'paiements.prix_reel')
+        //     ->distinct();
+
+        // // Calcul du montant total en sommant les prix_reel distincts
+        // $this->montantTotalFormationsEnCours = DB::table(DB::raw("({$distinctPaiements->toSql()}) as sub"))
+        //     ->mergeBindings($distinctPaiements)
+        //     ->sum('sub.prix_reel');
         $distinctPaiements = DB::table('paiements')
             ->join('sessions', 'paiements.session_id', '=', 'sessions.id')
             ->where('sessions.date_debut', '<=', Carbon::now())
             ->where('sessions.date_fin', '>=', Carbon::now())
-            ->select('paiements.session_id', 'paiements.etudiant_id', 'paiements.prix_reel')
-            ->distinct();
+            ->select('paiements.session_id', 'paiements.etudiant_id', DB::raw('MAX(paiements.prix_reel) as prix_reel'))
+            ->groupBy('paiements.session_id', 'paiements.etudiant_id');
 
         // Calcul du montant total en sommant les prix_reel distincts
         $this->montantTotalFormationsEnCours = DB::table(DB::raw("({$distinctPaiements->toSql()}) as sub"))
@@ -81,25 +92,25 @@ class Dashboard extends Component
 
 
         $distinctPaiementsTermines = DB::table('paiements')
-    ->join('sessions', 'paiements.session_id', '=', 'sessions.id')
-    ->where('sessions.date_fin', '<', Carbon::now())
-    ->select('paiements.session_id', 'paiements.etudiant_id', 'paiements.prix_reel')
-    ->distinct();
+            ->join('sessions', 'paiements.session_id', '=', 'sessions.id')
+            ->where('sessions.date_fin', '<', Carbon::now())
+            ->select('paiements.session_id', 'paiements.etudiant_id', 'paiements.prix_reel')
+            ->distinct();
 
-    // Calcul du montant total en sommant les prix_reel distincts pour les sessions terminées
-    $this->montantTotalFormationsTerminees = DB::table(DB::raw("({$distinctPaiementsTermines->toSql()}) as sub"))
-        ->mergeBindings($distinctPaiementsTermines)
-        ->sum('sub.prix_reel');
+        // Calcul du montant total en sommant les prix_reel distincts pour les sessions terminées
+        $this->montantTotalFormationsTerminees = DB::table(DB::raw("({$distinctPaiementsTermines->toSql()}) as sub"))
+            ->mergeBindings($distinctPaiementsTermines)
+            ->sum('sub.prix_reel');
 
-    // Calcul du montant payé et du reste à payer pour les sessions terminées
-    $paiementsTermines = DB::table('paiements')
-        ->join('sessions', 'paiements.session_id', '=', 'sessions.id')
-        ->where('sessions.date_fin', '<', Carbon::now())
-        ->select(DB::raw('SUM(paiements.montant_paye) as montant_paye'))
-        ->first();
+        // Calcul du montant payé et du reste à payer pour les sessions terminées
+        $paiementsTermines = DB::table('paiements')
+            ->join('sessions', 'paiements.session_id', '=', 'sessions.id')
+            ->where('sessions.date_fin', '<', Carbon::now())
+            ->select(DB::raw('SUM(paiements.montant_paye) as montant_paye'))
+            ->first();
 
-    $this->montantPayeTermines = $paiementsTermines->montant_paye ?? 0;
-    $this->resteAPayerTermines = $this->montantTotalFormationsTerminees - $this->montantPayeTermines;
+        $this->montantPayeTermines = $paiementsTermines->montant_paye ?? 0;
+        $this->resteAPayerTermines = $this->montantTotalFormationsTerminees - $this->montantPayeTermines;
 
     }
 

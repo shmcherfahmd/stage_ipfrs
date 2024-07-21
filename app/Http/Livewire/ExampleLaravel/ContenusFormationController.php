@@ -20,25 +20,27 @@ class ContenusFormationController extends Component
         return view('livewire.example-laravel.contenusformation-management', compact('contenues', 'formations'));
     }
 
+
     public function store(Request $request)
-    {
-        $request->validate([
-            'nomchap' => 'required|string',
-            'nomunite' => 'required|string',
-            'description' => 'nullable|string',
-            'nombreheures' => 'required|integer',
-            'formation_id' => 'required|exists:formations,id',
-        ]);
+{
+    $request->validate([
+        'nomchap' => 'required|string',
+        'nomunite' => 'required|string',
+        'description' => 'nullable|string',
+        'nombreheures' => 'required|integer',
+        'formation_id' => 'required|exists:formations,id',
+    ]);
 
-        try {
-            $contenu = ContenusFormation::create($request->all());
-            return response()->json(['success' => 'Contenu créé avec succès', 'contenu' => $contenu]);
-        } catch (\Throwable $th) {
-            return response()->json(['error' => $th->getMessage()], 500);
-        }
+    try {
+        $contenu = ContenusFormation::create($request->all());
+        return response()->json(['success' => 'Contenu créé avec succès', 'contenu' => $contenu]);
+    } catch (\Throwable $th) {
+        return response()->json(['error' => $th->getMessage()], 500);
     }
+}
 
-    public function update(Request $request, $id)
+
+public function update(Request $request, $id)
     {
         $request->validate([
             'nomchap' => 'required|string',
@@ -56,6 +58,9 @@ class ContenusFormationController extends Component
             return response()->json(['error' => $th->getMessage()], 500);
         }
     }
+
+
+
 
     public function delete_contenue($id)
     {

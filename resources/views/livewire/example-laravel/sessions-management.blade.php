@@ -128,8 +128,8 @@
                     <input type="number" class="form-control" id="nouveau-montant-paye" placeholder="Entrez le montant payé">
                 </div>
                 <div class="form-group">
-                    <label for="mode-paiement" class="form-label">Mode de Paiement:</label>
-                    <select class="form-control" id="mode-paiement">
+                    <label for="nouveau-mode-paiement" class="form-label">Mode de Paiement:</label>
+                    <select class="form-control" id="nouveau-mode-paiement">
                         <option value="">Sélectionner un mode du paiement</option>
                         @foreach ($modes_paiement as $mode)
                             <option value="{{ $mode->id }}">{{ $mode->nom }}</option>
@@ -137,8 +137,8 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="date-paiement" class="form-label">Date de Paiement:</label>
-                    <input type="date" class="form-control" id="date-paiement" name="date_paiement">
+                    <label for="nouveau-date-paiement" class="form-label">Date de Paiement:</label>
+                    <input type="date" class="form-control" id="nouveau-date-paiement" name="date_paiement">
                 </div>
             </div>
             <div class="modal-footer">
@@ -236,8 +236,8 @@
                     <input type="number" class="form-control" id="prof-nouveau-montant-paye" required>
                 </div>
                 <div class="mb-3">
-                    <label for="prof-mode-paiement" class="form-label">Mode de Paiement</label>
-                    <select class="form-select" id="prof-mode-paiement" required>
+                    <label for="nouveau-prof-mode-paiement" class="form-label">Mode de Paiement</label>
+                    <select class="form-select" id="nouveau-prof-mode-paiement" required>
                         <option value="">Sélectionner un mode du paiement</option>
                         @foreach ($modes_paiement as $mode)
                             <option value="{{ $mode->id }}">{{ $mode->nom }}</option>
@@ -245,13 +245,13 @@
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label for="prof-date-paiement" class="form-label">Date de Paiement</label>
-                    <input type="date" class="form-control" id="prof-date-paiement" name="date_paiement" required>
+                    <label for="nouveau-prof-date-paiement" class="form-label">Date de Paiement</label>
+                    <input type="date" class="form-control" id="nouveau-prof-date-paiement" name="date_paiement" required>
                 </div>
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-info" onclick="addProfPaiement()">Ajouter</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-                <button type="button" class="btn btn-primary" onclick="addProfPaiement()">Ajouter</button>
             </div>
         </div>
     </div>
@@ -741,12 +741,56 @@ $(document).ready(function () {
         });
     };
 
+    window.addEtudiantAndPaiement = function() {
+        const etudiantId = $('#etudiant-id').val();
+        const sessionId = $('#new-student-session_id').val();
+        const datePaiement = $('#date-paiement').val();
+        const montantPaye = $('#montant-paye').val();
+        const modePaiement = $('#mode-paiement').val();
+        const prixReel = $('#prix-reel').val();
+
+        if (!etudiantId || !sessionId) {
+            alert('Etudiant ID or Session ID is missing.');
+            return;
+        }
+
+        $.ajax({
+            url: `/sessions/${sessionId}/etudiants/${etudiantId}/add`,
+            type: 'POST',
+            data: {
+                etudiant_id: etudiantId,
+                date_paiement: datePaiement,
+                montant_paye: montantPaye,
+                mode_paiement: modePaiement,
+                prix_reel: prixReel
+            },
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                if (response.success) {
+                    $('#etudiantAddModal').modal('hide');
+                    showContents(sessionId);
+                } else {
+                    alert(response.error);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                console.error('Status:', status);
+                console.error('Response:', xhr.responseText);
+                alert('Erreur lors de l\'ajout de l\'étudiant: ' + xhr.responseText);
+            }
+        });
+    }
+
+
     window.addPaiement = function() {
-        let etudiantId = $('#etudiant-id').val();
-        let sessionId = $('#etudiant-session-id').val();
-        let nouveauMontantPaye = $('#nouveau-montant-paye').val();
-        let modePaiement = $('#mode-paiement').val();
-        let datePaiement = $('#date-paiement').val();
+        const etudiantId = $('#etudiant-id').val();
+        const sessionId = $('#etudiant-session-id').val();
+        const nouveauMontantPaye = $('#nouveau-montant-paye').val();
+        const modePaiement = $('#nouveau-mode-paiement').val();
+        const datePaiement = $('#nouveau-date-paiement').val();
 
         // Log the values to check if datePaiement is correctly retrieved
         console.log({
@@ -823,7 +867,7 @@ $(document).ready(function () {
                     return;
                 }
 
-                let html = `<div class="container-fluid py-4">
+                let html = `<div class="container-fluid ">
                     <div class="row">
                         <div class="col-12">
                             <div class="card my-4">
@@ -881,7 +925,47 @@ $(document).ready(function () {
                 $('#formationContentContainer').show();
 
                 // Display session info and statistics
-                $('#session-info').html(`<h5>Liste des étudiants de la Formation: "${response.session_nom}" du Programme : ${response.formation_nom} </h5>  Nombre de Étudiants: ${response.total_etudiants} | Total Prix Réel: ${response.total_prix_reel} | Total Montant Payé: ${response.total_montant_paye} | Reste à Payer: ${response.total_reste_a_payer}  `);
+                // $('#session-info').html(`<h5>Liste des étudiants de la Formation: "${response.session_nom}" du Programme : ${response.formation_nom} </h5>  Nombre de Étudiants: ${response.total_etudiants} | Total Prix Réel: ${response.total_prix_reel} | Total Montant Payé: ${response.total_montant_paye} | Reste à Payer: ${response.total_reste_a_payer}  `);
+                $('#session-info').html(`
+                    <div class="container-fluid">
+                        <div style="border: 1px solid #ccc; padding: 10px; border-radius: 8px; background-color: #fff; margin-bottom: 10px;">
+                            <h5 style="font-size: 16px; font-weight: bold; color: #333; margin-bottom: 10px;">
+                                Liste des étudiants de la Formation: <span style="color: #007bff;">"${response.session_nom}"</span> du Programme : <span style="color: #007bff;">${response.formation_nom}</span>
+                            </h5>
+                            <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                                <div style="flex: 1; min-width: 150px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; background-color: #fff;">
+                                    <p style="font-size: 12px; color: #555; margin: 0;">
+                                        <strong>Nombre de Étudiants:</strong>
+                                    </p>
+                                    <p style="font-size: 14px; color: #007bff; margin: 5px 0;">${response.total_etudiants}</p>
+                                </div>
+                                <div style="flex: 1; min-width: 150px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; background-color: #fff;">
+                                    <p style="font-size: 12px; color: #555; margin: 0;">
+                                        <strong>Total Prix Réel:</strong>
+                                    </p>
+                                    <p style="font-size: 14px; color: #007bff; margin: 5px 0;">${response.total_prix_reel}</p>
+                                </div>
+                                <div style="flex: 1; min-width: 150px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; background-color: #fff;">
+                                    <p style="font-size: 12px; color: #555; margin: 0;">
+                                        <strong>Total Montant Payé:</strong>
+                                    </p>
+                                    <p style="font-size: 14px; color: #007bff; margin: 5px 0;">${response.total_montant_paye}</p>
+                                </div>
+                                <div style="flex: 1; min-width: 150px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; background-color: #fff;">
+                                    <p style="font-size: 12px; color: #555; margin: 0;">
+                                        <strong>Reste à Payer:</strong>
+                                    </p>
+                                    <p style="font-size: 14px; color: #007bff; margin: 5px 0;">${response.total_reste_a_payer}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                `);
+
+
+
+
 
                 $('html, body').animate({ scrollTop: $('#formationContentContainer').offset().top }, 'slow');
             },
@@ -992,8 +1076,8 @@ $(document).ready(function () {
         let profId = $('#prof-id').val();
         let sessionId = $('#prof-session-id').val();
         let nouveauMontantPaye = $('#prof-nouveau-montant-paye').val();
-        let modePaiement = $('#prof-mode-paiement').val();
-        let datePaiement = $('#prof-date-paiement').val();
+        let modePaiement = $('#nouveau-prof-mode-paiement').val();
+        let datePaiement = $('#nouveau-prof-date-paiement').val();
         let montant = $('#prof-montant').val();
         let montantAPaye = $('#prof-montant_a_paye').val();
         let typeymntprofsId = $('#prof-typeymntprofs').val();
@@ -1121,48 +1205,6 @@ $(document).ready(function () {
     }
 
 
-    window.addEtudiantAndPaiement = function() {
-        const etudiantId = $('#etudiant-id').val();
-        const sessionId = $('#new-student-session_id').val();
-        const datePaiement = $('#date-paiement').val();
-        const montantPaye = $('#montant-paye').val();
-        const modePaiement = $('#mode-paiement').val();
-        const prixReel = $('#prix-reel').val();
-
-        if (!etudiantId || !sessionId) {
-            alert('Etudiant ID or Session ID is missing.');
-            return;
-        }
-
-        $.ajax({
-            url: `/sessions/${sessionId}/etudiants/${etudiantId}/add`,
-            type: 'POST',
-            data: {
-                etudiant_id: etudiantId,
-                date_paiement: datePaiement,
-                montant_paye: montantPaye,
-                mode_paiement: modePaiement,
-                prix_reel: prixReel
-            },
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(response) {
-                if (response.success) {
-                    $('#etudiantAddModal').modal('hide');
-                    showContents(sessionId);
-                } else {
-                    alert(response.error);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error:', error);
-                console.error('Status:', status);
-                console.error('Response:', xhr.responseText);
-                alert('Erreur lors de l\'ajout de l\'étudiant: ' + xhr.responseText);
-            }
-        });
-    }
 
     window.addProfAndPaiement = function() {
         const profId = $('#prof-id').val();
@@ -1251,7 +1293,7 @@ $(document).ready(function () {
                     return;
                 }
 
-                let html = `<div class="container-fluid py-4">
+                let html = `<div class="container-fluid ">
                     <div class="row">
                         <div class="col-12">
                             <div class="card my-4">
@@ -1309,7 +1351,43 @@ $(document).ready(function () {
                 html += `</tbody></table></div></div></div></div></div>`;
                 $('#formationProfContents').html(html);
                 $('#formationProfContentContainer').show();
-                $('#prof-session-info').html(`<h5>Liste des Professeurs de la Formation: ${response.prof_session_nom} du Programme: ${response.prof_formation_nom}</h5> Nombre de Professeurs: ${response.total_profs} | Total Montant à Payer: ${response.prof_total_montant_a_paye} | Total Montant Payé: ${response.prof_total_montant_paye} | Reste à Payer: ${response.prof_total_reste_a_payer}  `);
+                // $('#prof-session-info').html(`<h5>Liste des Professeurs de la Formation: ${response.prof_session_nom} du Programme: ${response.prof_formation_nom}</h5> Nombre de Professeurs: ${response.total_profs} | Total Montant à Payer: ${response.prof_total_montant_a_paye} | Total Montant Payé: ${response.prof_total_montant_paye} | Reste à Payer: ${response.prof_total_reste_a_payer}  `);
+                $('#prof-session-info').html(`
+                    <div class="container-fluid ">
+                        <div style="border: 1px solid #ccc; padding: 10px; border-radius: 8px; background-color: #fff; margin-bottom: 10px;">
+                            <h5 style="font-size: 16px; font-weight: bold; color: #333; margin-bottom: 10px;">
+                                Liste des Professeurs  Formation: <span style="color: #007bff;">"${response.prof_session_nom}"</span>  Programme : <span style="color: #007bff;">${response.prof_formation_nom}</span>
+                            </h5>
+                            <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                                <div style="flex: 1; min-width: 150px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; background-color: #fff;">
+                                    <p style="font-size: 12px; color: #555; margin: 0;">
+                                        <strong>Nombre de Professeurs:</strong>
+                                    </p>
+                                    <p style="font-size: 14px; color: #007bff; margin: 5px 0;">${response.total_profs}</p>
+                                </div>
+                                <div style="flex: 1; min-width: 150px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; background-color: #fff;">
+                                    <p style="font-size: 12px; color: #555; margin: 0;">
+                                        <strong>Total Montant à Payer:</strong>
+                                    </p>
+                                    <p style="font-size: 14px; color: #007bff; margin: 5px 0;">${response.prof_total_montant_a_paye}</p>
+                                </div>
+                                <div style="flex: 1; min-width: 150px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; background-color: #fff;">
+                                    <p style="font-size: 12px; color: #555; margin: 0;">
+                                        <strong>Total Montant Payé:</strong>
+                                    </p>
+                                    <p style="font-size: 14px; color: #007bff; margin: 5px 0;">${response.prof_total_montant_paye}</p>
+                                </div>
+                                <div style="flex: 1; min-width: 150px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; background-color: #fff;">
+                                    <p style="font-size: 12px; color: #555; margin: 0;">
+                                        <strong>Reste à Payer:</strong>
+                                    </p>
+                                    <p style="font-size: 14px; color: #007bff; margin: 5px 0;">${response.prof_total_reste_a_payer}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                `);
 
                 $('html, body').animate({ scrollTop: $('#formationProfContentContainer').offset().top }, 'slow');
             },

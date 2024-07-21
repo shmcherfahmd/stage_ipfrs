@@ -28,6 +28,33 @@ class ProfesseurController extends Component
         return view('livewire.example-laravel.prof-management', compact('profs', 'countries', 'typeymntprofs', 'mode_paiement'));
     }
 
+    public function getProfDetails($profId)
+    {
+        try {
+            $prof = Professeur::findOrFail($profId);
+            $formations = $prof->sessions->map(function ($session) use ($profId) {
+                $paiementprof = PaiementProf::where('prof_id', $profId)->where('session_id', $session->id)->first();
+                $statut = (now()->between($session->date_debut, $session->date_fin)) ? 'En cours' : 'Terminé';
+                return [
+                    'nom' => $session->nom,
+                    'montant_a_paye' => $paiementprof ? $paiementprof->montant_a_paye : 0,
+                    'montant_paye' => $paiementprof ? $paiementprof->montant_paye : 0,
+                    'reste_a_payer' => $paiementprof ? $paiementprof->montant_a_paye - $paiementprof->montant_paye : 0,
+                    'statut' => $statut,
+                ];
+            });
+    
+            return response()->json([
+                'prof' => $prof,
+                'formations' => $formations,
+            ]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Professeur non trouvé'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Erreur lors de la récupération des détails: ' . $e->getMessage()], 500);
+        }
+    }
+
     public function checkPhone(Request $request)
     {
         $query = Professeur::where('phone', $request->phone);
