@@ -414,430 +414,456 @@
             });
         });
 
-
-        window.editContent = function(contentId) {
-    $.get('/contenus/' + contentId, function(data) {
-        $('#contenu-id').val(data.contenu.id);
-        $('#formation-id-edit').val(data.contenu.formation_id);
-        $('#nomchap-edit').val(data.contenu.nomchap);
-        $('#nomunite-edit').val(data.contenu.nomunite);
-        $('#description-edit').val(data.contenu.description);
-        $('#nombreheures-edit').val(data.contenu.nombreheures);
-        $('#contenuEditModal').modal('show');
-    });
-};
-
-$('#update-contenu').click(function(e) {
-    e.preventDefault();
-    let id = $('#contenu-id').val();
-    let form = $('#contenu-edit-form')[0];
-    let data = new FormData(form);
-    data.append('_method', 'PUT');
-
-    // Validation des champs requis
-    let isValid = true;
-    if ($('#nomchap-edit').val().trim() === '') {
-        isValid = false;
-        $('#nomchap-edit').addClass('is-invalid');
-        $('#nomchap-warning-edit').text('Ce champ est requis.');
-    } else {
-        $('#nomchap-edit').removeClass('is-invalid');
-        $('#nomchap-warning-edit').text('');
-    }
-
-    if ($('#nomunite-edit').val().trim() === '') {
-        isValid = false;
-        $('#nomunite-edit').addClass('is-invalid');
-        $('#nomunite-warning-edit').text('Ce champ est requis.');
-    } else {
-        $('#nomunite-edit').removeClass('is-invalid');
-        $('#nomunite-warning-edit').text('');
-    }
-
-    if ($('#nombreheures-edit').val().trim() === '') {
-        isValid = false;
-        $('#nombreheures-edit').addClass('is-invalid');
-        $('#nombreheures-warning-edit').text('Ce champ est requis.');
-    } else {
-        $('#nombreheures-edit').removeClass('is-invalid');
-        $('#nombreheures-warning-edit').text('');
-    }
-
-    if (!isValid) {
-        return;
-    }
-
-    $.ajax({
-        url: '/contenus/' + id,
-        type: 'POST',
-        data: data,
-        dataType: 'json',
-        processData: false,
-        contentType: false,
-        success: function(response) {
-            if (response.error) {
-                iziToast.error({
-                    title: 'Erreur',
-                    message: response.error,
-                    position: 'topRight'
-                });
-            } else {
-                iziToast.success({
-                    title: 'Succès',
-                    message: response.success,
-                    position: 'topRight'
-                });
-                $('#contenuEditModal').modal('hide');
-                setTimeout(function() {
-                    location.reload();
-                }, 1000);
-            }
-        },
-        error: function(xhr, status, error) {
-            if (xhr.responseJSON && xhr.responseJSON.errors) {
-                $.each(xhr.responseJSON.errors, function(field, errors) {
-                    let fieldId = '#nomchap-edit' + field;
-                    $(fieldId).addClass('is-invalid');
-                    $(fieldId + '-warning-edit').text(errors.join(', '));
-                });
-            } else {
-                let errorMsg = 'Une erreur est survenue : ' + error;
-                iziToast.error({
-                    title: 'Erreur',
-                    message: errorMsg,
-                    position: 'topRight'
-                });
-            }
-        }
-    });
-});
-
-
-
-        // Supprimer une formation
-        $('body').on('click', '#delete-formation', function (e) {
-            e.preventDefault();
+        $('body').on('click', '#edit-formation', function () {
             var id = $(this).data('id');
+            $.get('/formations/' + id, function (data) {
+                $('#formation-id').val(data.formation.id);
+                $('#formation-code').val(data.formation.code);
+                $('#formation-nom').val(data.formation.nom);
+                $('#formation-duree').val(data.formation.duree);
+                $('#formation-prix').val(data.formation.prix);
+                $('#formationEditModal').modal('show');
+            });
+        });
+
+        $('#formation-update').click(function (e) {
+            e.preventDefault();
+            let id = $('#formation-id').val();
+            let form = $('#formation-edit-form')[0];
+            let data = new FormData(form);
+            data.append('_method', 'PUT');
 
             $.ajax({
                 url: '/formations/' + id,
-                type: 'DELETE',
+                type: 'POST',
+                data: data,
                 dataType: 'json',
+                processData: false,
+                contentType: false,
                 success: function (response) {
-                    if (response.status === 400 && response.has_contents) {
-                        if (confirm(response.message)) {
-                            // Si l'utilisateur confirme, envoyer une requête pour supprimer la formation et ses contenus
-                            $.ajax({
-                                url: '/formations/confirm-delete/' + id,
-                                type: 'DELETE',
-                                dataType: 'json',
-                                success: function (response) {
-                                    if (response.status === 200) {
-                                        iziToast.success({
-                                            message: response.message,
-                                            position: 'topRight'
-                                        });
-                                        location.reload();
-                                    } else {
-                                        iziToast.error({
-                                            message: response.message,
-                                            position: 'topRight'
-                                        });
-                                    }
-                                },
-                                error: function (xhr, status, error) {
-                                    var errorMessage = xhr.status + ': ' + xhr.statusText;
-                                    iziToast.error({
-                                        title: 'Erreur',
-                                        message: 'Une erreur s\'est produite: ' + errorMessage,
-                                        position: 'topRight'
-                                    });
-                                }
-                            });
-                        }
-                    } else if (response.status === 200) {
+                    if (response.status == 404) {
+                        iziToast.error({
+                            title: 'Erreur',
+                            message: response.message,
+                            position: 'topRight'
+                        });
+                    } else {
                         iziToast.success({
+                            title: 'Succès',
                             message: response.message,
                             position: 'topRight'
                         });
-                        location.reload();
-                    } else {
-                        iziToast.error({
-                            message: response.message,
-                            position: 'topRight'
-                        });
+                        $('#formationEditModal').modal('hide');
+                        setTimeout(function () {
+                            location.reload();
+                        }, 1000);
                     }
-                },
-                error: function (xhr, status, error) {
-                    var errorMessage = xhr.status + ': ' + xhr.statusText;
-                    iziToast.error({
-                        title: 'Erreur',
-                        message: 'Une erreur s\'est produite: ' + errorMessage,
-                        position: 'topRight'
-                    });
                 }
             });
         });
 
-        $('body').on('click', '#delete-formation', function (e) {
-            e.preventDefault();
-            var id = $(this).data('id');
-
-            $.ajax({
-                url: '/formations/' + id + '/delete',
-                type: 'DELETE',
-                dataType: 'json',
-                success: function (response) {
-                    if (response.status === 400) {
-                        iziToast.error({
-                            message: response.message,
-                            position: 'topRight'
-                        });
-                    } else if (response.status === 200 && response.confirm_deletion) {
-                        if (confirm(response.message)) {
-                            // Si l'utilisateur confirme, envoyer une requête pour supprimer la formation
-                            $.ajax({
-                                url: '/formations/' + id + '/confirm-delete',
-                                type: 'DELETE',
-                                dataType: 'json',
-                                success: function (response) {
-                                    if (response.status === 200) {
-                                        iziToast.success({
-                                            message: response.message,
-                                            position: 'topRight'
-                                        });
-                                        setTimeout(function () {
-                                            location.reload();
-                                        }, 1000);
-                                    } else {
-                                        iziToast.error({
-                                            message: response.message,
-                                            position: 'topRight'
-                                        });
-                                    }
-                                },
-                                error: function (xhr, status, error) {
-                                    var errorMessage = xhr.status + ': ' + xhr.statusText;
-                                    iziToast.error({
-                                        title: 'Erreur',
-                                        message: 'Une erreur s\'est produite: ' + errorMessage,
-                                        position: 'topRight'
-                                    });
-                                }
-                            });
-                        }
-                    } else {
-                        iziToast.error({
-                            message: response.message,
-                            position: 'topRight'
-                        });
-                    }
-                },
-                error: function (xhr, status, error) {
-                    var errorMessage = xhr.status + ': ' + xhr.statusText;
-                    iziToast.error({
-                        title: 'Erreur',
-                        message: 'Une erreur s\'est produite: ' + errorMessage,
-                        position: 'topRight'
-                    });
-                }
-            });
-        });
-
-window.setFormationId = function(formationId) {
-    $('#formation-id-contenu').val(formationId);
-};
-
-$("#add-new-contenu").click(function(e) {
+        // Supprimer une formation
+// Supprimer une formation
+$('body').on('click', '#delete-formation', function (e) {
     e.preventDefault();
-
-    let isValid = true;
-    if ($('#new-contenu-nomchap').val().trim() === '') {
-        isValid = false;
-        $('#new-contenu-nomchap').addClass('is-invalid');
-        $('#nomchap-warning').text('Ce champ est requis.');
-    } else {
-        $('#new-contenu-nomchap').removeClass('is-invalid');
-        $('#nomchap-warning').text('');
-    }
-
-    if ($('#new-contenu-nomunite').val().trim() === '') {
-        isValid = false;
-        $('#new-contenu-nomunite').addClass('is-invalid');
-        $('#nomunite-warning').text('Ce champ est requis.');
-    } else {
-        $('#new-contenu-nomunite').removeClass('is-invalid');
-        $('#nomunite-warning').text('');
-    }
-
-    if ($('#new-contenu-nombreheures').val().trim() === '') {
-        isValid = false;
-        $('#new-contenu-nombreheures').addClass('is-invalid');
-        $('#nombreheures-warning').text('Ce champ est requis.');
-    } else {
-        $('#new-contenu-nombreheures').removeClass('is-invalid');
-        $('#nombreheures-warning').text('');
-    }
-
-    if (!isValid) {
-        return;
-    }
-
-    let form = $('#contenu-add-form')[0];
-    let data = new FormData(form);
+    var id = $(this).data('id');
 
     $.ajax({
-        url: "{{ route('contenus.store') }}",
-        type: "POST",
-        data: data,
-        dataType: "json",
-        processData: false,
-        contentType: false,
-        success: function(response) {
-            if (response.error) {
+        url: `/formations/${id}`,
+        type: 'DELETE',
+        dataType: 'json',
+        success: function (response) {
+            if (response.status === 400) {
                 iziToast.error({
-                    title: 'Erreur',
-                    message: response.error,
+                    message: response.message,
                     position: 'topRight'
                 });
-            } else {
+            } else if (response.status === 200 && response.confirm_deletion) {
+                if (confirm(response.message)) {
+                    // Si l'utilisateur confirme, envoyer une requête pour supprimer la formation et ses contenus
+                    $.ajax({
+                        url: `/formations/confirm-delete/${id}`,
+                        type: 'DELETE',
+                        dataType: 'json',
+                        success: function (response) {
+                            if (response.status === 200) {
+                                iziToast.success({
+                                    message: response.message,
+                                    position: 'topRight'
+                                });
+                                setTimeout(function () {
+                                    location.reload();
+                                }, 1000);
+                            } else {
+                                iziToast.error({
+                                    message: response.message,
+                                    position: 'topRight'
+                                });
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            var errorMessage = xhr.status + ': ' + xhr.statusText;
+                            iziToast.error({
+                                title: 'Erreur',
+                                message: 'Une erreur s\'est produite: ' + errorMessage,
+                                position: 'topRight'
+                            });
+                        }
+                    });
+                }
+            } else if (response.status === 200) {
                 iziToast.success({
-                    title: 'Succès',
-                    message: response.success,
+                    message: response.message,
                     position: 'topRight'
                 });
-                $('#contenuAddModal').modal('hide');
-                showContents(id); // Refresh the list after adding
-
-                setTimeout(function() {
+                setTimeout(function () {
                     location.reload();
                 }, 1000);
+            } else {
+                iziToast.error({
+                    message: response.message,
+                    position: 'topRight'
+                });
             }
         },
-        error: function(xhr, status, error) {
-            if (xhr.responseJSON && xhr.responseJSON.errors) {
-                $.each(xhr.responseJSON.errors, function(field, errors) {
-                    let fieldId = '#new-contenu-' + field;
-                    $(fieldId).addClass('is-invalid');
-                    $(fieldId + '-warning').text(errors.join(', '));
-                });
-            } else {
-                let errorMsg = 'Une erreur est survenue : ' + error;
-                iziToast.error({
-                    title: 'Erreur',
-                    message: errorMsg,
-                    position: 'topRight'
-                });
-            }
-        }
-    });
-});
-
-window.editContent = function(contentId) {
-    $.get('/contenus/' + contentId, function(data) {
-        $('#contenu-id').val(data.contenu.id);
-        $('#formation-id-edit').val(data.contenu.formation_id);
-        $('#nomchap-edit').val(data.contenu.nomchap);
-        $('#nomunite-edit').val(data.contenu.nomunite);
-        $('#description-edit').val(data.contenu.description);
-        $('#nombreheures-edit').val(data.contenu.nombreheures);
-        $('#contenuEditModal').modal('show');
-    });
-};
-
-$('#update-contenu').click(function(e) {
-    e.preventDefault();
-    let id = $('#contenu-id').val();
-    let form = $('#contenu-edit-form')[0];
-    let data = new FormData(form);
-    data.append('_method', 'PUT');
-
-    // Validation des champs requis
-    let isValid = true;
-    if ($('#nomchap-edit').val().trim() === '') {
-        isValid = false;
-        $('#nomchap-edit').addClass('is-invalid');
-        $('#nomchap-warning-edit').text('Ce champ est requis.');
-    } else {
-        $('#nomchap-edit').removeClass('is-invalid');
-        $('#nomchap-warning-edit').text('');
-    }
-
-    if ($('#nomunite-edit').val().trim() === '') {
-        isValid = false;
-        $('#nomunite-edit').addClass('is-invalid');
-        $('#nomunite-warning-edit').text('Ce champ est requis.');
-    } else {
-        $('#nomunite-edit').removeClass('is-invalid');
-        $('#nomunite-warning-edit').text('');
-    }
-
-    if ($('#nombreheures-edit').val().trim() === '') {
-        isValid = false;
-        $('#nombreheures-edit').addClass('is-invalid');
-        $('#nombreheures-warning-edit').text('Ce champ est requis.');
-    } else {
-        $('#nombreheures-edit').removeClass('is-invalid');
-        $('#nombreheures-warning-edit').text('');
-    }
-
-    if (!isValid) {
-        return;
-    }
-
-    $.ajax({
-        url: '/contenus/update/' + id,
-        type: 'POST',
-        data: data,
-        dataType: 'json',
-        processData: false,
-        contentType: false,
-        success: function(response) {
-            if (response.error) {
-                iziToast.error({
-                    title: 'Erreur',
-                    message: response.error,
-                    position: 'topRight'
-                });
-            } else {
-                iziToast.success({
-                    title: 'Succès',
-                    message: response.success,
-                    position: 'topRight'
-                });
-                $('#contenuEditModal').modal('hide');
-                showContents(id); // Refresh the list after adding
-
-            }
-        },
-        
-        error: function(xhr, status, error) {
-            if (xhr.responseJSON && xhr.responseJSON.errors) {
-                $.each(xhr.responseJSON.errors, function(field, errors) {
-                    let fieldId = '#nomchap-edit' + field;
-                    $(fieldId).addClass('is-invalid');
-                    $(fieldId + '-warning-edit').text(errors.join(', '));
-                });
-            } else {
-                let errorMsg = 'Une erreur est survenue : ' + error;
-                iziToast.error({
-                    title: 'Erreur',
-                    message: errorMsg,
-                    position: 'topRight'
-                });
-            }
+        error: function (xhr, status, error) {
+            var errorMessage = xhr.status + ': ' + xhr.statusText;
+            iziToast.error({
+                title: 'Erreur',
+                message: 'Une erreur s\'est produite: ' + errorMessage,
+                position: 'topRight'
+            });
         }
     });
 });
 
 
 
+
+
+        // // Supprimer une formation
+        // $('body').on('click', '#delete-formation', function (e) {
+        //     e.preventDefault();
+        //     var id = $(this).data('id');
+
+        //     $.ajax({
+        //         url: '/formations/' + id,
+        //         type: 'DELETE',
+        //         dataType: 'json',
+        //         success: function (response) {
+        //             if (response.status === 400 && response.has_contents) {
+        //                 if (confirm(response.message)) {
+        //                     // Si l'utilisateur confirme, envoyer une requête pour supprimer la formation et ses contenus
+        //                     $.ajax({
+        //                         url: '/formations/confirm-delete/' + id,
+        //                         type: 'DELETE',
+        //                         dataType: 'json',
+        //                         success: function (response) {
+        //                             if (response.status === 200) {
+        //                                 iziToast.success({
+        //                                     message: response.message,
+        //                                     position: 'topRight'
+        //                                 });
+        //                                 location.reload();
+        //                             } else {
+        //                                 iziToast.error({
+        //                                     message: response.message,
+        //                                     position: 'topRight'
+        //                                 });
+        //                             }
+        //                         },
+        //                         error: function (xhr, status, error) {
+        //                             var errorMessage = xhr.status + ': ' + xhr.statusText;
+        //                             iziToast.error({
+        //                                 title: 'Erreur',
+        //                                 message: 'Une erreur s\'est produite: ' + errorMessage,
+        //                                 position: 'topRight'
+        //                             });
+        //                         }
+        //                     });
+        //                 }
+        //             } else if (response.status === 200) {
+        //                 iziToast.success({
+        //                     message: response.message,
+        //                     position: 'topRight'
+        //                 });
+        //                 location.reload();
+        //             } else {
+        //                 iziToast.error({
+        //                     message: response.message,
+        //                     position: 'topRight'
+        //                 });
+        //             }
+        //         },
+        //         error: function (xhr, status, error) {
+        //             var errorMessage = xhr.status + ': ' + xhr.statusText;
+        //             iziToast.error({
+        //                 title: 'Erreur',
+        //                 message: 'Une erreur s\'est produite: ' + errorMessage,
+        //                 position: 'topRight'
+        //             });
+        //         }
+        //     });
+        // });
+
+        // $('body').on('click', '#delete-formation', function (e) {
+        //     e.preventDefault();
+        //     var id = $(this).data('id');
+
+        //     $.ajax({
+        //         url: '/formations/' + id + '/delete',
+        //         type: 'DELETE',
+        //         dataType: 'json',
+        //         success: function (response) {
+        //             if (response.status === 400) {
+        //                 iziToast.error({
+        //                     message: response.message,
+        //                     position: 'topRight'
+        //                 });
+        //             } else if (response.status === 200 && response.confirm_deletion) {
+        //                 if (confirm(response.message)) {
+        //                     // Si l'utilisateur confirme, envoyer une requête pour supprimer la formation
+        //                     $.ajax({
+        //                         url: '/formations/' + id + '/confirm-delete',
+        //                         type: 'DELETE',
+        //                         dataType: 'json',
+        //                         success: function (response) {
+        //                             if (response.status === 200) {
+        //                                 iziToast.success({
+        //                                     message: response.message,
+        //                                     position: 'topRight'
+        //                                 });
+        //                                 setTimeout(function () {
+        //                                     location.reload();
+        //                                 }, 1000);
+        //                             } else {
+        //                                 iziToast.error({
+        //                                     message: response.message,
+        //                                     position: 'topRight'
+        //                                 });
+        //                             }
+        //                         },
+        //                         error: function (xhr, status, error) {
+        //                             var errorMessage = xhr.status + ': ' + xhr.statusText;
+        //                             iziToast.error({
+        //                                 title: 'Erreur',
+        //                                 message: 'Une erreur s\'est produite: ' + errorMessage,
+        //                                 position: 'topRight'
+        //                             });
+        //                         }
+        //                     });
+        //                 }
+        //             } else {
+        //                 iziToast.error({
+        //                     message: response.message,
+        //                     position: 'topRight'
+        //                 });
+        //             }
+        //         },
+        //         error: function (xhr, status, error) {
+        //             var errorMessage = xhr.status + ': ' + xhr.statusText;
+        //             iziToast.error({
+        //                 title: 'Erreur',
+        //                 message: 'Une erreur s\'est produite: ' + errorMessage,
+        //                 position: 'topRight'
+        //             });
+        //         }
+        //     });
+        // });
+
+        window.setFormationId = function(formationId) {
+            $('#formation-id-contenu').val(formationId);
+        };
+
+
+
+        $("#add-new-contenu").click(function(e) {
+            e.preventDefault();
+
+            let isValid = true;
+            if ($('#new-contenu-nomchap').val().trim() === '') {
+                isValid = false;
+                $('#new-contenu-nomchap').addClass('is-invalid');
+                $('#nomchap-warning').text('Ce champ est requis.');
+            } else {
+                $('#new-contenu-nomchap').removeClass('is-invalid');
+                $('#nomchap-warning').text('');
+            }
+
+            if ($('#new-contenu-nomunite').val().trim() === '') {
+                isValid = false;
+                $('#new-contenu-nomunite').addClass('is-invalid');
+                $('#nomunite-warning').text('Ce champ est requis.');
+            } else {
+                $('#new-contenu-nomunite').removeClass('is-invalid');
+                $('#nomunite-warning').text('');
+            }
+
+            if ($('#new-contenu-nombreheures').val().trim() === '') {
+                isValid = false;
+                $('#new-contenu-nombreheures').addClass('is-invalid');
+                $('#nombreheures-warning').text('Ce champ est requis.');
+            } else {
+                $('#new-contenu-nombreheures').removeClass('is-invalid');
+                $('#nombreheures-warning').text('');
+            }
+
+            if (!isValid) {
+                return;
+            }
+
+            let form = $('#contenu-add-form')[0];
+            let data = new FormData(form);
+            let formationId = $('#formation-id-contenu').val(); // Assurez-vous d'avoir l'ID de la formation
+
+            $.ajax({
+                url: "{{ route('contenus.store') }}",
+                type: "POST",
+                data: data,
+                dataType: "json",
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.error) {
+                        iziToast.error({
+                            title: 'Erreur',
+                            message: response.error,
+                            position: 'topRight'
+                        });
+                    } else {
+                        iziToast.success({
+                            title: 'Succès',
+                            message: response.success,
+                            position: 'topRight'
+                        });
+                        $('#contenuAddModal').modal('hide');
+                        showContents(formationId); // Refresh the list after adding
+                    }
+                },
+                error: function(xhr, status, error) {
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        $.each(xhr.responseJSON.errors, function(field, errors) {
+                            let fieldId = '#new-contenu-' + field;
+                            $(fieldId).addClass('is-invalid');
+                            $(fieldId + '-warning').text(errors.join(', '));
+                        });
+                    } else {
+                        let errorMsg = 'Une erreur est survenue : ' + error;
+                        iziToast.error({
+                            title: 'Erreur',
+                            message: errorMsg,
+                            position: 'topRight'
+                        });
+                    }
+                }
+            });
+        });
+
+
+        window.editContent = function(contentId) {
+            $.get('/contenus/' + contentId, function(data) {
+                $('#contenu-id').val(data.contenu.id);
+                $('#formation-id-edit').val(data.contenu.formation_id);
+                $('#nomchap-edit').val(data.contenu.nomchap);
+                $('#nomunite-edit').val(data.contenu.nomunite);
+                $('#description-edit').val(data.contenu.description);
+                $('#nombreheures-edit').val(data.contenu.nombreheures);
+                $('#contenuEditModal').modal('show');
+            });
+        };
+
+
+        $('#update-contenu').click(function(e) {
+            e.preventDefault();
+            let id = $('#contenu-id').val();
+            let formationId = $('#formation-id-edit').val(); // Assurez-vous d'avoir l'ID de la formation
+            let form = $('#contenu-edit-form')[0];
+            let data = new FormData(form);
+            data.append('_method', 'PUT');
+
+            // Validation des champs requis
+            let isValid = true;
+            if ($('#nomchap-edit').val().trim() === '') {
+                isValid = false;
+                $('#nomchap-edit').addClass('is-invalid');
+                $('#nomchap-warning-edit').text('Ce champ est requis.');
+            } else {
+                $('#nomchap-edit').removeClass('is-invalid');
+                $('#nomchap-warning-edit').text('');
+            }
+
+            if ($('#nomunite-edit').val().trim() === '') {
+                isValid = false;
+                $('#nomunite-edit').addClass('is-invalid');
+                $('#nomunite-warning-edit').text('Ce champ est requis.');
+            } else {
+                $('#nomunite-edit').removeClass('is-invalid');
+                $('#nomunite-warning-edit').text('');
+            }
+
+            if ($('#nombreheures-edit').val().trim() === '') {
+                isValid = false;
+                $('#nombreheures-edit').addClass('is-invalid');
+                $('#nombreheures-warning-edit').text('Ce champ est requis.');
+            } else {
+                $('#nombreheures-edit').removeClass('is-invalid');
+                $('#nombreheures-warning-edit').text('');
+            }
+
+            if (!isValid) {
+                return;
+            }
+
+            $.ajax({
+                url: '/contenus/update/' + id,
+                type: 'POST',
+                data: data,
+                dataType: 'json',
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.error) {
+                        iziToast.error({
+                            title: 'Erreur',
+                            message: response.error,
+                            position: 'topRight'
+                        });
+                    } else {
+                        iziToast.success({
+                            title: 'Succès',
+                            message: response.success,
+                            position: 'topRight'
+                        });
+                        $('#contenuEditModal').modal('hide');
+                        showContents(formationId); // Refresh the list after modification
+                    }
+                },
+                error: function(xhr, status, error) {
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        $.each(xhr.responseJSON.errors, function(field, errors) {
+                            let fieldId = '#nomchap-edit' + field;
+                            $(fieldId).addClass('is-invalid');
+                            $(fieldId + '-warning-edit').text(errors.join(', '));
+                        });
+                    } else {
+                        let errorMsg = 'Une erreur est survenue : ' + error;
+                        iziToast.error({
+                            title: 'Erreur',
+                            message: errorMsg,
+                            position: 'topRight'
+                        });
+                    }
+                }
+            });
+        });
 
 
 
         // Supprimer un contenu
         window.deleteContent = function(contentId) {
             if (confirm("Voulez-vous vraiment supprimer ce contenu?")) {
+                let formationId = $('#formation-id-contenu').val(); // Assurez-vous d'avoir l'ID de la formation
+
                 $.ajax({
                     url: '/contenus/' + contentId,
                     type: 'DELETE',
@@ -849,9 +875,8 @@ $('#update-contenu').click(function(e) {
                                 message: response.success,
                                 position: 'topRight'
                             });
-                            setTimeout(function () {
-                                location.reload();
-                            }, 1000);
+                            $('#contenuEditModal').modal('hide');
+                            showContents(formationId); // Refresh the list after deletion
                         } else {
                             iziToast.error({
                                 title: 'Erreur',
@@ -870,6 +895,7 @@ $('#update-contenu').click(function(e) {
                 });
             }
         }
+
 
         // Afficher les contenus de la formation
         window.showContents = function(formationId) {

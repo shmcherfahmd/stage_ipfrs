@@ -119,7 +119,7 @@
                                 <select class="form-control" id="new-prof-country_id" name="country_id">
                                     <option value="">Choisir la nationalité</option>
                                     @foreach ($countries as $country)
-                                        <option value="{{ $country->id }}">{{ $country->name }}</option>
+                                        <option value="{{ $country->id }}" {{ $country->name == 'Mauritania' ? 'selected' : '' }}>{{ $country->name }}</option>
                                     @endforeach
                                 </select>
                                 <div class="text-danger" id="country_id-warning"></div>
@@ -491,6 +491,10 @@
 
                 return isValid;
             }
+
+            $('#new-prof-phone').on('input', function () {
+                $('#new-prof-wtsp').val($(this).val());
+            });
 
             $("#add-new-prof").click(function(e){
                 e.preventDefault();

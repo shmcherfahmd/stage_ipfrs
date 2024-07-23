@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Livewire\Component;
 use App\Models\Formations;
 use App\Models\ContenusFormation;
+use App\Models\Sessions;
 use App\Exports\FormationsExport;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -74,28 +75,32 @@ class FormationsController extends Component
 
         if ($formation) {
             $contenus = ContenusFormation::where('formation_id', $id)->get();
+            $sessions = Sessions::where('formation_id', $id)->get();
 
-            if ($contenus->isNotEmpty()) {
+            if ($contenus->isNotEmpty() || $sessions->isNotEmpty()) {
                 return response()->json([
                     'status' => 400,
-                    'message' => 'Cette formation a des contenus associés. Voulez-vous vraiment la supprimer ainsi que tous ses contenus?',
-                    'has_contents' => true
+                    'message' => 'Cette formation a des contenus ou des sessions associés et ne peut pas être supprimée.',
                 ]);
             } else {
-                $formation->delete();
-                return response()->json(['status' => 200, 'message' => 'Formation supprimée avec succès.']);
+                return response()->json([
+                    'status' => 200,
+                    'message' => 'Voulez-vous vraiment supprimer cette formation?',
+                    'confirm_deletion' => true
+                ]);
             }
         } else {
             return response()->json(['status' => 404, 'message' => 'Formation non trouvée.']);
         }
     }
 
-    public function confirm_delete_formation(Request $request, $id)
+    public function confirm_delete_formation($id)
     {
         $formation = Formations::find($id);
 
         if ($formation) {
             ContenusFormation::where('formation_id', $id)->delete();
+            Sessions::where('formation_id', $id)->delete();
             $formation->delete();
 
             return response()->json(['status' => 200, 'message' => 'Formation et ses contenus supprimés avec succès.']);
@@ -103,6 +108,43 @@ class FormationsController extends Component
             return response()->json(['status' => 404, 'message' => 'Formation non trouvée.']);
         }
     }
+
+
+    // public function delete_formation($id)
+    // {
+    //     $formation = Formations::find($id);
+
+    //     if ($formation) {
+    //         $contenus = ContenusFormation::where('formation_id', $id)->get();
+
+    //         if ($contenus->isNotEmpty()) {
+    //             return response()->json([
+    //                 'status' => 400,
+    //                 'message' => 'Cette formation a des contenus associés. Voulez-vous vraiment la supprimer ainsi que tous ses contenus?',
+    //                 'has_contents' => true
+    //             ]);
+    //         } else {
+    //             $formation->delete();
+    //             return response()->json(['status' => 200, 'message' => 'Formation supprimée avec succès.']);
+    //         }
+    //     } else {
+    //         return response()->json(['status' => 404, 'message' => 'Formation non trouvée.']);
+    //     }
+    // }
+
+    // public function confirm_delete_formation(Request $request, $id)
+    // {
+    //     $formation = Formations::find($id);
+
+    //     if ($formation) {
+    //         ContenusFormation::where('formation_id', $id)->delete();
+    //         $formation->delete();
+
+    //         return response()->json(['status' => 200, 'message' => 'Formation et ses contenus supprimés avec succès.']);
+    //     } else {
+    //         return response()->json(['status' => 404, 'message' => 'Formation non trouvée.']);
+    //     }
+    // }
 
     public function export()
     {

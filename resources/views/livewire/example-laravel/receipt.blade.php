@@ -82,22 +82,24 @@
             <!-- <p>Date : {{ $date }}</p>
             <p>Heure : {{ $heure }}</p> -->
         </div>
-        <div class="details">
-            <p><strong>Nom et Prénom :</strong> {{ $nom_prenom }}</p>
-            <p><strong>Téléphone :</strong> {{ $Telephone }}</p>
-            <p><strong>Formation :</strong> {{ $formation }}</p>
-            <p><strong>Date de Début :</strong> {{ $date_debut }}</p>
-            <p><strong>Date de Fin :</strong> {{ $date_fin }}</p>
-            <p><strong>Mode de Paiement :</strong> {{ $Mode_peiment }}</p>
-            <p><strong>Montant Payé :</strong> {{ $montant_paye }} MRU</p>
-            <p><strong>Reste à Payer :</strong> {{ $reste_a_payer }} MRU</p>
-            <p><strong>Date de Paiement :</strong> {{ $date_paiement }}</p>
+        <div class="details" >
+            <div style="margin: 20px;">
+                <p><strong>Nom et Prénom :</strong> {{ $nom_prenom }}</p>
+                <p><strong>Téléphone :</strong> {{ $Telephone }}</p>
+                <p><strong>Formation :</strong> {{ $formation }}</p>
+                <p><strong>Date de Début :</strong> {{ $date_debut }}</p>
+                <p><strong>Date de Fin :</strong> {{ $date_fin }}</p>
+                <p><strong>Mode de Paiement :</strong> {{ $Mode_peiment }}</p>
+                <p><strong>Montant Payé :</strong> {{ $montant_paye }} MRU</p>
+                <p><strong>Reste à Payer :</strong> {{ $reste_a_payer }} MRU</p>
+                <p><strong>Date de Paiement :</strong> {{ $date_paiement }}</p>
+            </div>
         </div>
         <div class="footer">
             <p><strong>Par :</strong> {{ $par }}</p>
             <p>Date : {{ $date }}         {{ $heure }}</p>
             <!-- <p>Heure : {{ $heure }}</p> -->
-            <p><strong>Signature :</strong> {{ $signature }}</p>
+            <p><strong>Signature :</strong> {{ $signature }}</p><br><br>
         </div>
     </div>
 </body>

@@ -233,7 +233,7 @@
                 <input type="hidden" id="prof-typeymntprofs">
                 <div class="mb-3">
                     <label for="prof-nouveau-montant-paye" class="form-label">Montant Payé</label>
-                    <input type="number" class="form-control" id="prof-nouveau-montant-paye" required>
+                    <input type="number" class="form-control" id="prof-nouveau-montant-paye" placeholder="Entrez le montant payé" required>
                 </div>
                 <div class="mb-3">
                     <label for="nouveau-prof-mode-paiement" class="form-label">Mode de Paiement</label>
@@ -366,7 +366,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="sessionEditModalLabel">Modifier Session</h5>
+                <h5 class="modal-title" id="sessionEditModalLabel">Modifier Formation</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -375,19 +375,19 @@
                     <input type="hidden" id="session-id" name="id">
                     <div class="row mb-2">
                         <div class="col-md-6">
-                            <label for="session-nom" class="form-label required">Nom :</label>
-                            <input type="text" class="form-control" id="session-nom" name="nom">
-                            <div class="text-danger" id="edit-nom-warning"></div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="session-formation_id" class="form-label required">Formation :</label>
+                            <label for="session-formation_id" class="form-label required">Programme :</label>
                             <select class="form-control" id="session-formation_id" name="formation_id">
-                                <option value="">Sélectionner Formation</option>
+                                <option value="">Sélectionner Programme</option>
                                 @foreach ($formations as $formation)
                                     <option value="{{ $formation->id }}">{{ $formation->nom }}</option>
                                 @endforeach
                             </select>
                             <div class="text-danger" id="edit-formation_id-warning"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="session-nom" class="form-label required">Nom :</label>
+                            <input type="text" class="form-control" id="session-nom" name="nom">
+                            <div class="text-danger" id="edit-nom-warning"></div>
                         </div>
                     </div>
                     <div class="row mb-2">
@@ -446,112 +446,108 @@ $(document).ready(function () {
 
     
     $("#add-new-session").click(function(e){
-    e.preventDefault();
+        e.preventDefault();
 
-    // Validation des champs requis
-    let isValid = true;
+        // Validation des champs requis
+        let isValid = true;
 
-    if ($('#new-session-formation_id').val().trim() === '') {
-        isValid = false;
-        $('#new-session-formation_id').addClass('is-invalid');
-        $('#formation_id-warning').text('Ce champ est requis.');
-    } else {
-        $('#new-session-formation_id').removeClass('is-invalid');
-        $('#formation_id-warning').text('');
-    }
+        if ($('#new-session-formation_id').val().trim() === '') {
+            isValid = false;
+            $('#new-session-formation_id').addClass('is-invalid');
+            $('#formation_id-warning').text('Ce champ est requis.');
+        } else {
+            $('#new-session-formation_id').removeClass('is-invalid');
+            $('#formation_id-warning').text('');
+        }
 
-    if ($('#new-session-nom').val().trim() === '') {
-        isValid = false;
-        $('#new-session-nom').addClass('is-invalid');
-        $('#nom-warning').text('Ce champ est requis.');
-    } else {
-        $('#new-session-nom').removeClass('is-invalid');
-        $('#nom-warning').text('');
-    }
+        if ($('#new-session-nom').val().trim() === '') {
+            isValid = false;
+            $('#new-session-nom').addClass('is-invalid');
+            $('#nom-warning').text('Ce champ est requis.');
+        } else {
+            $('#new-session-nom').removeClass('is-invalid');
+            $('#nom-warning').text('');
+        }
 
-    if ($('#new-session-date_debut').val().trim() === '') {
-        isValid = false;
-        $('#new-session-date_debut').addClass('is-invalid');
-        $('#date_debut-warning').text('Ce champ est requis.');
-    } else {
-        $('#new-session-date_debut').removeClass('is-invalid');
-        $('#date_debut-warning').text('');
-    }
+        if ($('#new-session-date_debut').val().trim() === '') {
+            isValid = false;
+            $('#new-session-date_debut').addClass('is-invalid');
+            $('#date_debut-warning').text('Ce champ est requis.');
+        } else {
+            $('#new-session-date_debut').removeClass('is-invalid');
+            $('#date_debut-warning').text('');
+        }
 
-    if ($('#new-session-date_fin').val().trim() === '') {
-        isValid = false;
-        $('#new-session-date_fin').addClass('is-invalid');
-        $('#date_fin-warning').text('Ce champ est requis.');
-    } else {
-        $('#new-session-date_fin').removeClass('is-invalid');
-        $('#date_fin-warning').text('');
-    }
+        if ($('#new-session-date_fin').val().trim() === '') {
+            isValid = false;
+            $('#new-session-date_fin').addClass('is-invalid');
+            $('#date_fin-warning').text('Ce champ est requis.');
+        } else {
+            $('#new-session-date_fin').removeClass('is-invalid');
+            $('#date_fin-warning').text('');
+        }
 
-    if (!isValid) {
-        return;
-    }
+        if (!isValid) {
+            return;
+        }
 
-    let form = $('#session-add-form')[0];
-    let data = new FormData(form);
+        let form = $('#session-add-form')[0];
+        let data = new FormData(form);
 
-    $.ajax({
-        url: "{{ route('session.store') }}",
-        type: "POST",
-        data: data,
-        dataType: "JSON",
-        processData: false,
-        contentType: false,
-        success: function(response) {
-            if (response.error) {
-                if (response.error === 'Le nom de session existe déjà.') {
-                    $('#new-session-nom').addClass('is-invalid');
-                    $('#nom-warning').text(response.error);
+        $.ajax({
+            url: "{{ route('session.store') }}",
+            type: "POST",
+            data: data,
+            dataType: "JSON",
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.error) {
+                    if (response.error === 'Le nom de session existe déjà.') {
+                        $('#new-session-nom').addClass('is-invalid');
+                        $('#nom-warning').text(response.error);
+                    } else {
+                        iziToast.error({
+                            title: 'Erreur',
+                            message: response.error,
+                            position: 'topRight'
+                        });
+                    }
                 } else {
+                    iziToast.success({
+                        message: response.success,
+                        position: 'topRight'
+                    });
+                    $('#sessionAddModal').modal('hide');
+                    location.reload();
+                }
+            },
+            error: function(xhr, status, error) {
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    if (xhr.status === 409) { // Conflit
+                        $('#new-session-nom').addClass('is-invalid');
+                        $('#nom-warning').text(xhr.responseJSON.error);
+                    } else {
+                        iziToast.error({
+                            title: 'Erreur',
+                            message: xhr.responseJSON.error,
+                            position: 'topRight'
+                        });
+                    }
+                } else {
+                    let errorMsg = 'Une erreur est survenue : ' + error;
                     iziToast.error({
                         title: 'Erreur',
-                        message: response.error,
+                        message: errorMsg,
                         position: 'topRight'
                     });
                 }
-            } else {
-                iziToast.success({
-                    message: response.success,
-                    position: 'topRight'
-                });
-                $('#sessionAddModal').modal('hide');
-                location.reload();
             }
-        },
-        error: function(xhr, status, error) {
-            if (xhr.responseJSON && xhr.responseJSON.error) {
-                if (xhr.status === 409) { // Conflit
-                    $('#new-session-nom').addClass('is-invalid');
-                    $('#nom-warning').text(xhr.responseJSON.error);
-                } else {
-                    iziToast.error({
-                        title: 'Erreur',
-                        message: xhr.responseJSON.error,
-                        position: 'topRight'
-                    });
-                }
-            } else {
-                let errorMsg = 'Une erreur est survenue : ' + error;
-                iziToast.error({
-                    title: 'Erreur',
-                    message: errorMsg,
-                    position: 'topRight'
-                });
-            }
-        }
+        });
     });
-});
 
-$(document).ready(function () {
-    $.ajaxSetup({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        }
-    });
+
+
 
     // Modifier une session
     $('body').on('click', '.btn-info', function () {
@@ -601,7 +597,7 @@ $(document).ready(function () {
             }
         });
     });
-});
+
 
 
     $('body').on('click', '#delete-session', function (e) {
@@ -723,6 +719,9 @@ $(document).ready(function () {
                         $('#prix-formation').val(response.prix_formation);
                         $('#prix-reel').val(response.prix_reel);
                         $('#reste-a-payer').val(resteAPayer);
+                         // Set the date field to today's date
+                        const today = new Date().toISOString().split('T')[0];
+                        $('#nouveau-date-paiement').val(today);
                         $('#paiementAddModal').modal('show');
                     }
                 } else {
@@ -1030,9 +1029,9 @@ $(document).ready(function () {
     }
 
     window.loadProfSessionDetails = function(sessionId) {
-    const today = new Date().toISOString().split('T')[0];
-    $('#prof-date-paiement').val(today); // Set Date de Paiement to today's date
-};
+        const today = new Date().toISOString().split('T')[0];
+        $('#prof-date-paiement').val(today); // Set Date de Paiement to today's date
+    };
 
 
     window.openAddProfPaymentModal = function(profId, sessionId) {
@@ -1054,6 +1053,9 @@ $(document).ready(function () {
                         $('#prof-montant_a_paye').val(response.montant_a_paye);
                         $('#prof-reste-a-payer').val(resteAPayer);
                         $('#prof-typeymntprofs').val(response.type_paiement); // Assurez-vous que cette valeur est correcte
+                         // Set the date field to today's date
+                        const today = new Date().toISOString().split('T')[0];
+                        $('#nouveau-prof-date-paiement').val(today);
                         $('#profPaiementAddModal').modal('show');
                     }
                 } else {
@@ -1116,23 +1118,6 @@ $(document).ready(function () {
         });
     }
 
-    // window.loadProfSessionDetails = function(sessionId) {
-    //     $.ajax({
-    //         url: `/sessions/${sessionId}/details`,
-    //         type: 'GET',
-    //         success: function(response) {
-    //             if (response.formation) {
-    //                 const today = new Date().toISOString().split('T')[0];
-    //                 $('#prof-date-paiement').val(today); // Set Date de Paiement to today's date
-    //             } else {
-    //                 $('#prof-montant').val(''); // Clear Montant if no formation data is found
-    //             }
-    //         },
-    //         error: function(xhr, status, error) {
-    //             alert('Erreur lors du chargement des détails de la session: ' + error);
-    //         }
-    //     });
-    // }
 
     window.updatePaymentFields = function() {
         const typeId = $('#prof-typeymntprofs').val();

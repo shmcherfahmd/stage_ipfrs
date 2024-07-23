@@ -103,7 +103,11 @@ Route::get('/sessions/{etudiantId}/generate-receipt/{sessionId}', [SessionsContr
 Route::get('/formations', [FormationsController::class, 'liste_formation']);
 Route::post('/formations/store', [FormationsController::class, 'store']);
 Route::put('/formations/{id}/update', [FormationsController::class, 'update']);
-Route::delete('/formations/{id}/delete', [FormationsController::class, 'delete_formation']);
+// Route::delete('/formations/{id}/delete', [FormationsController::class, 'delete_formation']);
+
+
+Route::delete('/formations/{id}', [FormationsController::class, 'delete_formation'])->name('formation.delete');
+Route::delete('/formations/confirm-delete/{id}', [FormationsController::class, 'confirm_delete_formation'])->name('formation.confirm-delete');
 
 Route::delete('contenus/{id}', [ContenusFormationController::class, 'delete_contenue'])->name('contenus.delete');
 
@@ -275,7 +279,7 @@ Route::get('/formations', [FormationsController::class, 'liste_formation'])->nam
 Route::get('/search1', [FormationsController::class, 'search1'])->name('search1');
 Route::get('formations/{id}', [FormationsController::class, 'show']);
 Route::put('formations/{id}', [FormationsController::class, 'update']);
-Route::delete('formations/{id}', [FormationsController::class, 'delete_formation']);
+// Route::delete('formations/{id}', [FormationsController::class, 'delete_formation']);
 Route::get('formations/{id}/contents', [FormationsController::class, 'getFormationContents']);
 Route::delete('/formations/{id}/delete', [FormationsController::class, 'deleteFormation'])->name('formations.delete');
 Route::delete('/formations/{id}/confirm-delete', [FormationsController::class, 'confirmDeleteFormation'])->name('formations.confirm-delete');

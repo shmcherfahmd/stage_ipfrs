@@ -97,18 +97,37 @@
                     <span class="nav-link-text ms-1"><b>Paiements Professeurs</b> </span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link text-white {{ Route::currentRouteName() == 'user-profile' ? ' active bg-gradient-info' : '' }}  "
+                    href="{{ route('user-profile') }}">
+                    <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
+                        <i class="material-icons opacity-10">person</i>
+                    </div>
+                    <span class="nav-link-text ms-1"><b>Profile</b> </span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="#">
+                
+                    <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
+                        <i class="material-icons opacity-10">logout</i>
+                    </div>
+                    <b><livewire:auth.logout/></b> 
+                    
+                </a>
+            </li>
             <!-- <li class="nav-item">
-    <a class="nav-link text-white {{ Route::currentRouteName() == 'contenusformation-management' ? ' active bg-gradient-info' : '' }}  "
-        href="{{ route('contenusformation-management') }}">
-        <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
-            <i class="material-icons opacity-10">format_list_bulleted</i>
-        </div>
-        <span class="nav-link-text ms-1">Contenus de programme</span>
-    </a>
-</li> -->
+                <a class="nav-link text-white {{ Route::currentRouteName() == 'contenusformation-management' ? ' active bg-gradient-info' : '' }}  "
+                    href="{{ route('contenusformation-management') }}">
+                    <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
+                        <i class="material-icons opacity-10">format_list_bulleted</i>
+                    </div>
+                    <span class="nav-link-text ms-1">Contenus de programme</span>
+                </a>
+            </li> -->
 
             
-            <li class="nav-item">
+            <!-- <li class="nav-item">
                 <a class="nav-link text-white " href="{{ route('static-sign-in') }}">
                     <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
                         <i class="material-icons opacity-10">login</i>
@@ -123,7 +142,7 @@
                     </div>
                     <span class="nav-link-text ms-1"><b>S'inscrire</b></span>
                 </a>
-            </li> 
+            </li>  -->
 
 
             
